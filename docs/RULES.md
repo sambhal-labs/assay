@@ -6,7 +6,7 @@
 
 # Assay rules
 
-53 built-in rules. Severities and thresholds shown are defaults; both are
+56 built-in rules. Severities and thresholds shown are defaults; both are
 overridable via `assay.config.json` ("rules", "budgets") or the `--rules` flag.
 Scoring math: [GRADING.md](GRADING.md).
 
@@ -407,6 +407,32 @@ Models tokenize and match tool names; unconventional casing, very long names, an
 Tool-selection accuracy degrades as the catalog grows: every extra tool is another distractor in the model context. Servers past the budget should be split by domain or expose a smaller routed surface.
 
 **Fix:** Split the catalog into focused servers or namespace tools behind fewer entry points.
+
+### Dimension: Reliability
+
+#### MCP401 — Tool call fails at the protocol level
+
+**Severity:** warn · **Dimension:** Reliability
+
+The probe calls each tool with minimal arguments that satisfy the tool's own advertised inputSchema. A protocol-level failure on such a call (a JSON-RPC error, a timeout, or a reply that violates the MCP result shape) means the contract the server publishes is not the contract it enforces — hosts retry, mis-handle, or drop the tool entirely. Expected failures belong in a structured tool-level error result, not at the protocol layer.
+
+**Fix:** Handle any input the advertised inputSchema admits; report tool failures as an isError result, never a protocol error.
+
+#### MCP402 — Probe p95 latency over budget
+
+**Severity:** info · **Dimension:** Reliability
+
+Agents call tools in loops, and every slow call multiplies across a session while the host (and the user) waits. The p95 across probed calls is compared against budgets.probeLatencyP95Ms; one slow outlier is fine, a slow 95th percentile is the server, not the network.
+
+**Fix:** Cut cold-start and per-call overhead, or raise budgets.probeLatencyP95Ms if slow calls are inherent to the domain.
+
+#### MCP403 — Error responses lack machine-readable structure
+
+**Severity:** warn · **Dimension:** Reliability
+
+When a tool fails, the model reads the error and decides what to do next: retry, change arguments, or give up. A bare text blob — typically a stack trace — gives it nothing to reason over and often leaks implementation detail. A machine-readable error (JSON with a code/message, or multiple typed content items) turns failures into something an agent can actually recover from.
+
+**Fix:** Return errors as structured content (e.g. a JSON body with a code and message) instead of a bare prose or stack-trace string.
 
 ## Context files (CTX)
 

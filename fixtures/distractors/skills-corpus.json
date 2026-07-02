@@ -1,0 +1,122 @@
+[
+  {
+    "name": "code-review",
+    "description": "Review pull requests and diffs for correctness, style, and maintainability issues. Use when the user asks for a code review, feedback on a diff, or a pre-merge quality check."
+  },
+  {
+    "name": "spreadsheet-analysis",
+    "description": "Analyze CSV and Excel spreadsheets: summarize columns, build pivot tables, and spot anomalies. Use when the user shares tabular data and asks questions about totals, trends, or outliers."
+  },
+  {
+    "name": "calendar-booking",
+    "description": "Schedule, reschedule, and cancel calendar events across attendees and time zones. Use when the user wants to find an open slot, book a meeting, or resolve a scheduling conflict."
+  },
+  {
+    "name": "image-editing",
+    "description": "Resize, crop, convert, and retouch images, including background removal and format conversion. Use when the user asks to modify an existing image file rather than generate a new one."
+  },
+  {
+    "name": "k8s-debugging",
+    "description": "Diagnose Kubernetes problems: CrashLoopBackOff, OOMKilled pods, failing readiness probes, and misbehaving deployments. Use when the user reports broken workloads in a cluster."
+  },
+  {
+    "name": "sql-query-builder",
+    "description": "Write and optimize SQL queries against relational databases, including joins, window functions, and index advice. Use when the user needs a query written, explained, or made faster."
+  },
+  {
+    "name": "web-scraping",
+    "description": "Extract structured data from web pages: product listings, tables, and article text, with pagination handling. Use when the user wants data pulled off a website into a usable format."
+  },
+  {
+    "name": "document-translation",
+    "description": "Translate documents between languages while preserving formatting, tone, and technical terminology. Use when the user asks to translate prose, docs, or UI copy."
+  },
+  {
+    "name": "git-workflows",
+    "description": "Untangle git problems: interactive rebases, cherry-picks, conflict resolution, and history rewrites. Use when the user is stuck mid-rebase, has diverging branches, or lost commits."
+  },
+  {
+    "name": "pdf-processing",
+    "description": "Merge, split, compress, and extract text or tables from PDF documents. Use when the user needs content pulled out of a PDF or several PDFs combined into one."
+  },
+  {
+    "name": "email-triage",
+    "description": "Prioritize and summarize an email inbox: surface messages needing replies, draft responses, and archive noise. Use when the user asks what in their inbox actually matters."
+  },
+  {
+    "name": "ci-pipeline-doctor",
+    "description": "Diagnose failing CI builds: flaky tests, broken caching, misconfigured workflows, and dependency drift. Use when the user reports a red pipeline or a build that only fails in CI."
+  },
+  {
+    "name": "data-visualization",
+    "description": "Turn datasets into charts: line, bar, scatter, and heatmaps with sensible axes and legends. Use when the user asks to visualize data or improve an existing chart."
+  },
+  {
+    "name": "docs-search",
+    "description": "Search internal documentation, wikis, and runbooks to answer questions with cited sources. Use when the user asks where something is documented or wants a policy or procedure looked up."
+  },
+  {
+    "name": "regex-builder",
+    "description": "Craft, explain, and debug regular expressions with test cases for edge inputs. Use when the user needs a pattern matched, validated, or a cryptic regex deciphered."
+  },
+  {
+    "name": "api-mocking",
+    "description": "Stand up mock REST and GraphQL endpoints with realistic fake data for demos and tests. Use when the user needs an API simulated before or instead of the real backend."
+  },
+  {
+    "name": "log-analysis",
+    "description": "Parse and summarize application and access logs: error clustering, traffic patterns, and suspicious activity. Use when the user shares log files and wants signal extracted from them."
+  },
+  {
+    "name": "resume-screening",
+    "description": "Evaluate resumes against a job description: rank candidates, flag gaps, and summarize strengths. Use when the user is shortlisting applicants for a role."
+  },
+  {
+    "name": "meeting-notes",
+    "description": "Turn meeting transcripts or recordings into structured notes with decisions, action items, and owners. Use when the user shares a meeting and wants the takeaways."
+  },
+  {
+    "name": "dependency-audit",
+    "description": "Audit project dependencies for known vulnerabilities, license conflicts, and outdated packages. Use when the user asks whether their dependency tree is safe to ship."
+  },
+  {
+    "name": "i18n-localization",
+    "description": "Externalize hardcoded strings into locale files and adapt layouts, dates, and plurals per language. Use when the user is preparing an app for multiple languages."
+  },
+  {
+    "name": "dockerfile-optimizer",
+    "description": "Shrink and speed up container builds: layer ordering, multi-stage builds, and smaller base images. Use when the user complains about image size or slow Docker builds."
+  },
+  {
+    "name": "unit-test-generation",
+    "description": "Generate unit test suites for existing code, covering edge cases, error paths, and mocking of dependencies. Use when the user asks for tests to be written for a module or function."
+  },
+  {
+    "name": "financial-modeling",
+    "description": "Build financial models: revenue projections, unit economics, and discounted cash flow analyses. Use when the user asks for forecasts, scenarios, or valuation math."
+  },
+  {
+    "name": "terraform-review",
+    "description": "Review Terraform plans and modules for destructive changes, drift, and security misconfigurations. Use when the user wants infrastructure-as-code changes checked before apply."
+  },
+  {
+    "name": "accessibility-audit",
+    "description": "Audit web pages and flows against WCAG criteria: contrast, keyboard navigation, ARIA usage, and screen-reader behavior. Use when the user asks how accessible their UI is."
+  },
+  {
+    "name": "changelog-writer",
+    "description": "Draft release notes and changelogs from commit history and merged pull requests, grouped by impact. Use when the user is cutting a release and needs the changes summarized."
+  },
+  {
+    "name": "slide-deck-builder",
+    "description": "Turn briefs, docs, or data into presentation outlines and slide content with a clear narrative arc. Use when the user needs a pitch, review, or teaching deck drafted."
+  },
+  {
+    "name": "database-migration",
+    "description": "Plan and write schema migrations: column splits, backfills, and zero-downtime rollout strategies. Use when the user needs to change a live database schema safely."
+  },
+  {
+    "name": "incident-postmortem",
+    "description": "Draft blameless incident postmortems: timeline reconstruction, contributing factors, and follow-up actions. Use when the user needs an outage written up after the fact."
+  }
+]
