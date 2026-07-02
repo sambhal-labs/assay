@@ -64,9 +64,9 @@ describe('determinism', () => {
   it('grading the malicious fixture 100 times yields identical scorecards', async () => {
     const artifact = await parseSkill(join(fixturesDir, 'skills', 'malicious'));
     const render = () => {
-      const { stats, ...stable } = gradeArtifact(artifact, defaultConfig(), 0);
-      const { durationMs, ...stableStats } = stats;
-      return JSON.stringify({ ...stable, stats: stableStats });
+      const card = gradeArtifact(artifact, defaultConfig(), 0);
+      // durationMs is the one sanctioned nondeterministic field — normalize it.
+      return JSON.stringify({ ...card, stats: { ...card.stats, durationMs: 0 } });
     };
     const first = render();
     for (let i = 0; i < 99; i++) expect(render()).toBe(first);
