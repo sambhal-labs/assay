@@ -1,0 +1,27 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`renderTerminal > renders the scorecard (no color) 1`] = `
+"
+  ASSAY v0.1.0                                          skill · skills/pdf-tools
+
+  Structure           ████████████████████  100  A+
+  Trigger quality     ████████████░░░░░░░░   62  D    2 issues
+  Token efficiency    ██████████████░░░░░░   71  C-   1 issue
+  Instruction quality █████████████████░░░   83  B 
+  Security            ████████████████████  100  A+
+
+  ── Grade: C+ (74) ────────────────────────────────────────────────────────────
+
+  Top fixes → B
+   1. SK103  Add "Use when…" guidance to the description  (+9)
+   2. SK202  SKILL.md is 6,412 tokens — split references out  (+5)
+
+  Findings
+   ▲ SK103  description has no usage guidance
+   ▲ SK104  description names no concrete actions
+   ▲ SK202  SKILL.md body is 6,412 tokens  SKILL.md
+
+  30 rules · 3 findings · ~6412 tokens · 0.8s
+  docs: https://github.com/sambhal-labs/assay/blob/main/docs/RULES.md
+"
+`;
