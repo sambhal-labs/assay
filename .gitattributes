@@ -1,0 +1,3 @@
+# Fixture files carry deliberate invisible-unicode and CRLF content that rules
+# must detect — never normalize them.
+fixtures/** -text

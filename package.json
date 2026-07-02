@@ -1,0 +1,66 @@
+{
+  "name": "assaydev",
+  "version": "0.1.0",
+  "description": "The open-source quality gate for everything you feed an AI agent: skills, MCP servers, and context files. Lighthouse-style grades, actionable fixes, CI gating, and README badges. Fully local, zero accounts.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "agent-skills",
+    "claude",
+    "linter",
+    "quality",
+    "ci",
+    "llm",
+    "ai-agents"
+  ],
+  "homepage": "https://github.com/sambhal-labs/assay#readme",
+  "bugs": "https://github.com/sambhal-labs/assay/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sambhal-labs/assay.git"
+  },
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "assay": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx src/cli.ts",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "gen:docs": "tsx scripts/gen-rules-doc.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "commander": "^15.0.0",
+    "fast-glob": "^3.3.3",
+    "js-tiktoken": "^1.0.21",
+    "picocolors": "^1.1.1",
+    "yaml": "^2.9.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@types/node": "^22.0.0",
+    "@vitest/coverage-v8": "^4.1.9",
+    "eslint": "^9.0.0",
+    "prettier": "^3.0.0",
+    "tsup": "^8.5.1",
+    "tsx": "^4.22.4",
+    "typescript": "^5.6.0",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^4.1.9"
+  }
+}

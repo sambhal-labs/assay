@@ -1,0 +1,6 @@
+fixtures/
+dist/
+coverage/
+demo/
+package-lock.json
+CHANGELOG.md

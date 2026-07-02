@@ -1,0 +1,7 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.assay/
+assay-badge.svg
+*.tgz
