@@ -308,6 +308,11 @@ export type Artifact = SkillArtifact | McpArtifact | ContextFileArtifact;
  */
 export interface RuleHit {
   message: string;
+  /**
+   * Banded rules (e.g. token budgets with an info and a warn threshold) set
+   * this per hit. A config severity override still wins.
+   */
+  severity?: Severity;
   fix?: string;
   location?: FindingLocation;
   meta?: Record<string, unknown>;

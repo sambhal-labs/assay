@@ -97,6 +97,24 @@ describe('runRules', () => {
     expect(findings.map((f) => f.location?.line)).toEqual([2, 5, 9]);
   });
 
+  it('honors per-hit severity for banded rules, config override still wins', () => {
+    const banded: Rule = {
+      ...rule('SK098'),
+      check: () => [
+        { message: 'over info budget', severity: 'info' },
+        { message: 'over warn budget' },
+      ],
+    };
+    const { findings } = runRules(skillArtifact(), [banded], defaultConfig());
+    expect(findings.map((f) => f.severity)).toEqual(['info', 'warn']);
+
+    const overridden = runRules(skillArtifact(), [banded], {
+      ...defaultConfig(),
+      rules: { SK098: 'error' as const },
+    });
+    expect(overridden.findings.map((f) => f.severity)).toEqual(['error', 'error']);
+  });
+
   it('wraps a crashing rule in an error naming the rule — rules must never throw', () => {
     const crashing: Rule = {
       ...rule('SK099'),
