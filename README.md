@@ -4,7 +4,29 @@
 
 A $125M company says skills are the new code. Code gets linters, tests, and CI gates. **Assay is that — for skills, MCP servers, and agent context files.** Free, local, open source.
 
-<!-- HERO: terminal screenshot / GIF of `npx assaydev ./my-skill` goes here -->
+```text
+$ npx assaydev skill fixtures/skills/malicious
+
+  ASSAY v0.1.0                                 skill · fixtures/skills/malicious
+
+  Structure           ████████████████████  100  A+
+  Trigger quality     ████████████████████  100  A+
+  Token efficiency    ████████████████████  100  A+
+  Instruction quality ████████████████████  100  A+
+  Security            ████░░░░░░░░░░░░░░░░   18  F    10 issues
+
+  ── Grade: C+ (79) ────────────────────────────────────────────────────────────
+  ▲ security errors cap the grade at C+ (uncapped: 84)
+
+  Findings
+   ✖ SK401  injection phrase (ignore-instructions): "Ignore all previous instructions"  SKILL.md:23
+   ✖ SK402  hidden zero-width character U+200B  SKILL.md:21
+   ✖ SK403  AWS access key ID detected: AKIAIOSF…MPLE  SKILL.md:28
+   ▲ SK404  fetch-and-execute pattern (curl-pipe-shell)  SKILL.md:30
+   …
+```
+
+That is a verbatim run against [a deliberately well-written skill carrying a prompt injection, hidden Unicode, and a leaked credential](fixtures/skills/malicious/SKILL.md) (findings abridged) — four dimensions are perfect, and the grade still says _not shippable_.
 
 ## Quickstart (30 seconds)
 
@@ -47,7 +69,7 @@ Every rule: [docs/RULES.md](docs/RULES.md).
 
 Each dimension starts at 100. Findings subtract severity penalties (error −15, warn −5, info −1) with per-rule step-down decay, so 40 copies of the same mistake don't zero a dimension — but each fix still moves the number. Dimensions roll up through fixed weights into a composite and a letter grade (A+ … F).
 
-One override: **any security error caps the composite at 79 (C+)**, because an injectable A-grade artifact is a lie. The scorecard always shows the uncapped number too.
+Two overrides keep the math honest. **Any security error caps the composite at 79 (C+)** — an injectable A-grade artifact is a lie. And **an artifact that cannot load at all (missing SKILL.md, unparseable frontmatter) is pinned to 55 (F)** — "nothing to check" must not read as perfect. The scorecard always shows the uncapped number too.
 
 The "top fixes" section is a rescore, not a guess: remove all instances of a rule, recompute the grade, rank by gain.
 

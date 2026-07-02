@@ -22,7 +22,7 @@ jobs:
       - run: npm run lint
       - run: npx prettier --check .
       - run: npm run build
-      - run: npm test
+      - run: npm run test:coverage
 
   # assay grades its own repo; our CLAUDE.md must hold an A.
   dogfood:

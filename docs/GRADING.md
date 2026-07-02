@@ -138,6 +138,20 @@ Two honest details:
   `securityCapped: true`), so you can see exactly what the artifact would score once the
   security finding is fixed.
 
+## The foundational cap
+
+A dimension with nothing to check would otherwise score a perfect 100 — which means a
+skill whose `SKILL.md` is missing, or whose frontmatter is absent or unparseable, would
+grade **A+** precisely _because_ it is too broken to evaluate. That is a lie in the other
+direction, so findings marked **foundational** (`SK001`; `SK002`'s missing/invalid-YAML
+cases) pin the composite at **55, an F**: an artifact that cannot load cannot be better
+than an F.
+
+Same honesty rules as the security cap: it never raises a score, it takes precedence over
+the security cap when both apply, `compositeRaw` still shows what the evaluable rules
+scored, and the top-fixes projection shows the full un-pinning gain for fixing the
+foundational finding.
+
 ## Top fixes
 
 The scorecard's "top fixes" section is not a heuristic — it is a rescore. For each rule that
