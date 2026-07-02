@@ -16,10 +16,22 @@ const handlers: CliHandlers = {
     const { runGrade } = await import('./commands/grade.js');
     await runGrade(path, opts);
   },
-  mcp: notYet('MCP server grading'),
-  repo: notYet('repo mode'),
-  ci: notYet('the CI gate'),
-  badge: notYet('badge generation'),
+  mcp: async (target, opts) => {
+    const { runMcp } = await import('./commands/mcp.js');
+    await runMcp(target, opts);
+  },
+  repo: async (dir, opts) => {
+    const { runRepo } = await import('./commands/repo.js');
+    await runRepo(dir, opts);
+  },
+  ci: async (target, threshold, opts) => {
+    const { runCi } = await import('./commands/ci.js');
+    await runCi(target, threshold, opts);
+  },
+  badge: async (target, out, opts) => {
+    const { runBadge } = await import('./commands/badge.js');
+    await runBadge(target, out, opts);
+  },
   evalSkill: notYet('the trigger-accuracy eval'),
 };
 
