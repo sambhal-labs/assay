@@ -39,6 +39,7 @@ export function runRules(artifact: Artifact, rules: Rule[], config: ResolvedConf
         dimension: rule.meta.dimension,
         message: hit.message,
         fix: hit.fix ?? rule.meta.fixHint,
+        ...(hit.foundational ? { foundational: true } : {}),
         ...(hit.location ? { location: hit.location } : {}),
         ...(hit.meta ? { meta: hit.meta } : {}),
       });

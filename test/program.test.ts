@@ -48,6 +48,14 @@ describe('assay skill', () => {
     const h = await run(['skill', './dir']);
     expect(h.grade).toHaveBeenCalledWith('./dir', expect.anything());
   });
+
+  it('accepts shared flags after the subcommand too', async () => {
+    const h = await run(['skill', './dir', '--format', 'json', '--no-color']);
+    expect(h.grade).toHaveBeenCalledWith(
+      './dir',
+      expect.objectContaining({ format: 'json', color: false }),
+    );
+  });
 });
 
 describe('assay mcp parsing contract', () => {

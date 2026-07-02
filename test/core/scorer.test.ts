@@ -167,6 +167,34 @@ describe('score', () => {
     expect(card.topFixes[0]!.ruleId).toBe('SK401');
   });
 
+  it('a foundational finding pins the composite into the F band', () => {
+    const card = scoreSkill([{ ...finding('SK002', 'error', 'structure'), foundational: true }]);
+    expect(card.compositeRaw).toBe(97.75); // 100 - 15 * 0.15
+    expect(card.composite).toBe(55);
+    expect(card.grade).toBe('F');
+    expect(card.securityCapped).toBe(false);
+  });
+
+  it('foundational cap takes precedence over the security cap', () => {
+    const card = scoreSkill([
+      { ...finding('SK001', 'error', 'structure'), foundational: true },
+      finding('SK401', 'error', 'security'),
+    ]);
+    expect(card.composite).toBe(55);
+    expect(card.grade).toBe('F');
+  });
+
+  it('fixing the foundational rule projects the un-pinned score', () => {
+    const card = scoreSkill([
+      { ...finding('SK002', 'error', 'structure'), foundational: true },
+      finding('SK105', 'info', 'trigger'),
+    ]);
+    expect(card.composite).toBe(55);
+    const fix = card.topFixes.find((f) => f.ruleId === 'SK002')!;
+    expect(fix.projectedComposite).toBe(99.7); // 100 - 1 * 0.30
+    expect(fix.projectedGrade).toBe('A+');
+  });
+
   it('is deterministic across 100 runs', () => {
     const findings = [
       finding('SK101', 'error', 'trigger'),

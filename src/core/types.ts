@@ -47,6 +47,8 @@ export const FindingSchema = z.object({
   dimension: DimensionSchema,
   message: z.string(),
   fix: z.string(),
+  /** The artifact cannot load at all — pins the composite into the F band. */
+  foundational: z.boolean().optional(),
   location: FindingLocationSchema.optional(),
   meta: z.record(z.string(), z.unknown()).optional(),
 });
@@ -313,6 +315,12 @@ export interface RuleHit {
    * this per hit. A config severity override still wins.
    */
   severity?: Severity;
+  /**
+   * Marks a failure that makes the artifact unloadable (SKILL.md missing,
+   * frontmatter unusable). The scorer pins the composite into the F band —
+   * dimensions with nothing to check must not read as perfect.
+   */
+  foundational?: boolean;
   fix?: string;
   location?: FindingLocation;
   meta?: Record<string, unknown>;

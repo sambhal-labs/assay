@@ -1,6 +1,6 @@
 # Assay
 
-Deterministic quality grader for AI agent artifacts: skills (SKILL.md), MCP servers, and context files (CLAUDE.md / AGENTS.md / .cursorrules). npm package `assaydev`, bin `assay`. TypeScript strict ESM with NodeNext — every relative import needs an explicit `.js` extension.
+Deterministic quality grader for AI agent artifacts: skills, MCP servers, and agent context files. npm package `assaydev`, bin `assay`. TypeScript strict ESM with NodeNext — every relative import needs an explicit `.js` extension.
 
 ## Commands
 

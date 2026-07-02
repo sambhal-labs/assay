@@ -46,6 +46,14 @@ export const GRADE_BANDS: ReadonlyArray<readonly [number, Grade]> = [
  */
 export const SECURITY_CAP_SCORE = 79;
 
+/**
+ * A foundational failure (SKILL.md missing, frontmatter absent or
+ * unparseable) means the artifact cannot load at all — dimensions with
+ * "nothing to check" would otherwise score a perfect 100. Pinned into the
+ * F band: an artifact that can't load can't be better than an F.
+ */
+export const FOUNDATIONAL_CAP_SCORE = 55;
+
 export const DIMENSION_WEIGHTS: Record<ArtifactType, Partial<Record<Dimension, number>>> = {
   skill: { structure: 0.15, trigger: 0.3, token: 0.2, instruction: 0.15, security: 0.2 },
   'mcp-server': { protocol: 0.2, definition: 0.3, token: 0.2, security: 0.3 },
