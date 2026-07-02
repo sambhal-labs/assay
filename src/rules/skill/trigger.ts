@@ -21,13 +21,37 @@ const wordCount = (text: string): number => text.split(/\s+/).filter(Boolean).le
  */
 const MIN_WORDS_FOR_PHRASING = 7;
 
+/**
+ * SK103/SK104 are English-only lexicons; docking a flawless German or
+ * Japanese description for missing English phrases is unfair. Skip both
+ * when the description's letters are mostly non-ASCII.
+ */
+const NON_ENGLISH_MARKERS =
+  /\b(?:der|die|das|und|nicht|wenn|für|eine?[nmr]?|möchte|verwenden|benutzer|oder|dans|pour|une|avec|les|des|cuando|para|los|las|usar|também|quando|não|ou)\b/giu;
+
+function isMostlyEnglish(text: string): boolean {
+  const letters = text.match(/\p{L}/gu)?.length ?? 0;
+  if (letters === 0) return true;
+  // Non-Latin scripts: the ASCII-letter ratio gives it away.
+  const ascii = text.match(/[a-zA-Z]/g)?.length ?? 0;
+  if (ascii / letters < 0.66) return false;
+  // Latin-script languages (German, French, Spanish…) are mostly ASCII —
+  // spot them by common function words instead.
+  NON_ENGLISH_MARKERS.lastIndex = 0;
+  return (text.match(NON_ENGLISH_MARKERS)?.length ?? 0) < 2;
+}
+
+/**
+ * A description is placeholder text when it essentially IS the placeholder —
+ * starting with a stub marker, or consisting of a stock phrase and little
+ * else. "Create, sort, and archive todo items…" is a real description that
+ * merely contains the word "todo" and must not fire.
+ */
 const PLACEHOLDER_RES: ReadonlyArray<RegExp> = [
-  /\btodo\b/i,
-  /\btbd\b/i,
-  /\bfixme\b/i,
-  /\ba skill for\b/i,
-  /\bdescription here\b/i,
-  /\bdoes stuff\b/i,
+  /^(?:todo|tbd|fixme|xxx)\b/i,
+  /^description (?:goes )?here\b/i,
+  /^does stuff\b/i,
+  /^a skill(?: for [\w\s-]{0,24})?[.!]?$/i,
 ];
 
 const USAGE_GUIDANCE_RE =
@@ -177,6 +201,7 @@ export const triggerRules: Rule[] = [
       const skill = asSkill(artifact);
       const desc = description(skill);
       if (desc === null || wordCount(desc) < MIN_WORDS_FOR_PHRASING) return [];
+      if (!isMostlyEnglish(desc)) return []; // English-only lexicon
       if (USAGE_GUIDANCE_RE.test(desc)) return [];
       return [
         {
@@ -201,6 +226,7 @@ export const triggerRules: Rule[] = [
       const skill = asSkill(artifact);
       const desc = description(skill);
       if (desc === null || wordCount(desc) < MIN_WORDS_FOR_PHRASING) return [];
+      if (!isMostlyEnglish(desc)) return []; // English-only lexicon
       const verbs = distinctActionVerbs(desc);
       if (verbs.length >= 2) return [];
       const found = verbs.length === 1 ? `only "${verbs[0]}"` : 'none';

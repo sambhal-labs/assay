@@ -102,6 +102,7 @@ export const ScorecardSchema = z.object({
   compositeRaw: z.number(),
   grade: GradeSchema,
   securityCapped: z.boolean(),
+  foundationalCapped: z.boolean(),
   topFixes: z.array(TopFixSchema),
   stats: z.object({
     tokens: z.number().int(),
@@ -233,6 +234,12 @@ export interface SkillArtifact extends ArtifactBase {
   tokens: { total: number; body: number };
   /** Files in the skill directory other than SKILL.md (relative paths). */
   resourceFiles: string[];
+  /**
+   * Text contents of resource files (size-capped, text extensions only) so
+   * the security detectors cover the files a model is told to open — the
+   * classic place to stash a payload SKILL.md itself doesn't carry.
+   */
+  resourceContents?: Array<{ path: string; content: string }>;
   /** Relative links found in the body, resolved against the skill dir. */
   references: SkillReference[];
   siblings: SkillSibling[];

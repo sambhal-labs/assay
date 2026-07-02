@@ -1,17 +1,92 @@
 # Assay
 
+[![CI](https://github.com/sambhal-labs/assay/actions/workflows/ci.yml/badge.svg)](https://github.com/sambhal-labs/assay/actions/workflows/ci.yml)
+![assay grade](docs/assay-badge.svg)
+[![license: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+![node >= 20](https://img.shields.io/badge/node-%3E%3D20-brightgreen)
+
 > Deterministic quality grades for everything you feed an AI agent — skills, MCP servers, and context files. One command, a letter grade, and the exact fixes to reach the next one.
 
-A $125M company says skills are the new code. Code gets linters, tests, and CI gates. **Assay is that — for skills, MCP servers, and agent context files.** Free, local, open source.
+```text
+$ npx assaydev skill fixtures/skills/malicious
 
-<!-- HERO: terminal screenshot / GIF of `npx assaydev ./my-skill` goes here -->
+  ASSAY v0.1.0                                 skill · fixtures/skills/malicious
 
-## Quickstart (30 seconds)
+  Structure           ████████████████████  100  A+
+  Trigger quality     ████████████████████  100  A+
+  Token efficiency    ████████████████████  100  A+
+  Instruction quality ████████████████████  100  A+
+  Security            ████░░░░░░░░░░░░░░░░   18  F    10 issues
 
-The package is `assaydev`; the command it installs is `assay`.
+  ── Grade: C+ (79) ────────────────────────────────────────────────────────────
+  ▲ security errors cap the grade at C+ (uncapped: 84)
+
+  Findings
+   ✖ SK401  injection phrase (conceal-from-user): "do not tell the…  SKILL.md:23
+   ✖ SK401  injection phrase (ignore-instructions): "Ignore all pr…  SKILL.md:23
+   ✖ SK402  hidden zero-width character U+200B  SKILL.md:21
+   ✖ SK403  AWS access key ID detected: AKIAIOSF…MPLE  SKILL.md:28
+   …
+
+  27 rules · 10 findings · ~899 tokens · 1.1s
+```
+
+A real run (remaining findings elided) against [a deliberately well-written skill carrying a prompt injection, hidden Unicode, and a leaked credential](fixtures/skills/malicious/SKILL.md) — four dimensions are perfect, and the grade still says _not shippable_.
+
+The npm package is **`assaydev`**; the command it installs is **`assay`**.
+
+## What
+
+Assay is a **linter and CI gate for AI agent context artifacts** — the things you hand to a model and hope for the best:
+
+| Artifact          | Examples                                              | What gets graded                                                                                                         |
+| ----------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| **Skills**        | `SKILL.md` packages                                   | structure, trigger quality, token efficiency, instruction quality, security                                              |
+| **MCP servers**   | stdio or streamable HTTP                              | protocol compliance, tool-definition quality, token cost (in dollars), security, and — with `--probe` — live reliability |
+| **Context files** | `CLAUDE.md`, `AGENTS.md`, `.cursorrules`, `GEMINI.md` | token budget, stale file references, phantom commands, contradictions, security                                          |
+
+Everything runs locally: no accounts, no telemetry, no network calls — except MCP servers you explicitly point it at, and the opt-in eval tier with your own API keys.
+
+## Why
+
+[Tessl](https://tessl.io) — $125M raised — says skills are the new code. Code gets linters, tests, and CI gates; agent context gets vibes. The numbers back it up: [Arcade](https://www.arcade.dev)'s ToolBench index found **~0.5% of 218,000 analyzed MCP tools earn an A grade**, with missing descriptions the single most common defect. The tools that do check quality run server-side, behind accounts, on proprietary scoring.
+
+There was no `eslint` for this layer. A skill with a vague description silently never triggers. An MCP server with 40 undocumented tools taxes every conversation and degrades tool selection. A stale `CLAUDE.md` teaches the model commands that don't exist. And any of them can carry a prompt injection that no human reviewer will spot behind a zero-width character.
+
+Assay is the missing gate: **free, local, deterministic, explainable.** Every deduction has a rule ID, a one-line fix, and its exact grade impact — the same input produces the same grade on every machine, because the static core never calls a model.
+
+## How
+
+```text
+input ──▶ detect type ──▶ adapter (all I/O) ──▶ normalized artifact
+                                                      │
+   reporter ◀── scorecard ◀── scorer ◀── findings ◀── rule engine (56 pure rules)
+ (terminal · json · md · badge)   │
+                                  └──▶ ci gate (exit code)
+```
+
+Adapters do every read, connect, and token count up front; the 56 rules are pure synchronous functions over that data — which is what makes the whole pipeline deterministic and fast (a 10-skill repo grades in well under 3 seconds, enforced by a perf test).
+
+**Scoring** (full math with worked examples in [docs/GRADING.md](docs/GRADING.md)): each dimension starts at 100; findings subtract severity penalties (error −15, warn −5, info −1) with per-rule step-down decay so 40 copies of one mistake don't zero a dimension. Dimensions roll up through fixed weights into a composite and a letter grade (A ≥ 93 · B ≥ 83 · C ≥ 73 · D ≥ 60 · F below — full bands in the docs).
+
+Two overrides keep the math honest:
+
+- **Security cap** — any security error pins the grade at **C+ (79)**. An injectable A-grade artifact is a lie.
+- **Foundational cap** — an artifact that cannot load at all (missing `SKILL.md`, unparseable frontmatter) pins at **F (55)**. "Nothing to check" must not read as perfect.
+
+The scorecard always shows the uncapped number too, and the "top fixes" section is a rescore, not a guess: remove all instances of a rule, recompute the grade, rank by gain.
+
+## Quickstart
 
 ```bash
-# Grade anything — auto-detects a skill dir, context file, or repo
+# Try it right now — no skills of your own needed:
+npx assaydev mcp -- npx -y @modelcontextprotocol/server-everything
+# …or clone this repo and grade the deliberately-poisoned fixture from the hero:
+#   git clone https://github.com/sambhal-labs/assay && cd assay
+#   npx assaydev skill fixtures/skills/malicious
+
+# Grade anything — finds SKILL.md dirs and CLAUDE.md/AGENTS.md/.cursorrules
+# (errors if there are none; point it at a skill, file, or MCP server instead)
 npx assaydev .
 
 # Grade a skill directory (SKILL.md + resources)
@@ -21,47 +96,32 @@ npx assaydev skill ./my-skill
 npx assaydev mcp -- npx -y @yourorg/your-server
 npx assaydev mcp https://example.com/mcp
 
+# Probe MCP tool reliability (calls tools with schema-synthesized args;
+# mutation-named tools are skipped unless you pass --unsafe)
+npx assaydev mcp --probe -- npx -y @yourorg/your-server
+
 # Gate CI: exit 1 below the threshold (plain runs always exit 0)
 npx assaydev ci --threshold B+
 
 # Write an SVG grade badge + the README snippet to paste
 npx assaydev badge
+
+# Opt-in, BYOK: would a model actually load this skill at the right time?
+ANTHROPIC_API_KEY=… npx assaydev eval ./my-skill
+
+# Prefer a permanent install:
+npm i -g assaydev   # installs the `assay` command
 ```
 
-- **Fully local.** No accounts, no telemetry, no network calls — except MCP servers you explicitly point it at, and the opt-in eval tier with your own API keys.
-- **Deterministic.** Same input → same grade, every run. The static core never calls a model.
-- **Actionable.** Every deduction has a rule ID, a one-line fix, and its exact grade impact.
+### Exit codes
 
-## What it checks
+| Code | Meaning                                                                                      |
+| ---- | -------------------------------------------------------------------------------------------- |
+| 0    | Graded successfully — plain runs always exit 0, even for an F                                |
+| 1    | `assay ci` only: grade below threshold                                                       |
+| 2    | Operational error (nothing found to grade, unreachable target, invalid config, internal bug) |
 
-**Skills** (`SKILL.md` packages) — five dimensions:
-structure (`SK001` missing SKILL.md, `SK005` dead resource references), trigger quality (`SK101` description too short to ever fire, `SK106` description collides with a sibling skill), token efficiency (`SK202` body over token budget, `SK203` monolith with zero companion files), instruction quality (`SK304` contradictory absolute rules), and security (`SK401` prompt-injection phrases, `SK402` hidden Unicode, `SK403` secret-shaped strings).
-
-**MCP servers** (stdio or streamable HTTP) — protocol compliance (`MCP001` initialize fails), definition quality (`MCP101` tools with no description, `MCP104` parameters with no descriptions — the single most common defect in public servers), token cost (`MCP202` translates your server's context tax into dollars), security (`MCP301` tool poisoning, `MCP303` cross-tool steering), and — with `--probe` — reliability (`MCP401` protocol errors on schema-valid calls).
-
-**Context files** (`CLAUDE.md`, `AGENTS.md`, `.cursorrules`, `GEMINI.md`) — token budget (`CTX001`), references to files that don't exist (`CTX002`), commands that aren't in your package scripts (`CTX003`), contradictory rules (`CTX004`), filler sections (`CTX005`), and the shared security detectors (`CTX006`).
-
-Every rule: [docs/RULES.md](docs/RULES.md).
-
-## How grading works
-
-Each dimension starts at 100. Findings subtract severity penalties (error −15, warn −5, info −1) with per-rule step-down decay, so 40 copies of the same mistake don't zero a dimension — but each fix still moves the number. Dimensions roll up through fixed weights into a composite and a letter grade (A+ … F).
-
-One override: **any security error caps the composite at 79 (C+)**, because an injectable A-grade artifact is a lie. The scorecard always shows the uncapped number too.
-
-The "top fixes" section is a rescore, not a guess: remove all instances of a rule, recompute the grade, rank by gain.
-
-Full math with worked examples: [docs/GRADING.md](docs/GRADING.md).
-
-## Exit codes
-
-| Code | Meaning                                                              |
-| ---- | -------------------------------------------------------------------- |
-| 0    | Graded successfully — plain runs always exit 0, even for an F        |
-| 1    | `assay ci` only: grade below threshold                               |
-| 2    | Operational error (unreachable target, invalid config, internal bug) |
-
-## Configuration
+### Configuration
 
 Zero-config works. To tune, drop an `assay.config.json` next to where you run:
 
@@ -73,25 +133,24 @@ Zero-config works. To tune, drop an `assay.config.json` next to where you run:
 }
 ```
 
-Rule overrides also work inline: `npx assaydev . --rules SK101=off,MCP201=error`.
+Rule overrides also work inline: `npx assaydev . --rules SK101=off,MCP201=error`. Every rule and every budget default: [docs/RULES.md](docs/RULES.md).
 
-## GitHub Action
-
-After the v1 tag lands:
+### GitHub Action
 
 ```yaml
-# after v1 tag: uses: sambhal-labs/assay@v1
 - uses: sambhal-labs/assay@v1
   with:
     path: .
     threshold: B+
 ```
 
-Until then, the plain CLI gates just as well:
+The Action grades the target, writes the markdown scorecard to the job summary, and fails the job below the threshold. This repo runs it on itself — assay gates its own `CLAUDE.md` at threshold A on every push.
 
-```yaml
-- run: npx assaydev ci --threshold B+
-```
+## The eval tier (opt-in)
+
+Static analysis can't answer one question: _would a model actually load this skill at the right time?_ `assay eval` builds a routing scenario — your skill plus 11 realistic distractors — generates 8 positive and 8 negative user requests, and asks a judge model (your API key, Anthropic or OpenAI) which skill to load. You get precision/recall/F1 merged into the scorecard, clearly labeled **non-deterministic**.
+
+Cost-guarded by design: it prints a dollar estimate and asks before spending, hard-aborts over `eval.maxUSD` (default $0.50), and caches responses in `.assay/cache/` so re-runs are free.
 
 ## How it compares
 
@@ -114,15 +173,37 @@ Honest table — these tools solve overlapping but different problems. As of Jul
 Nothing is opaque: every deduction has a rule ID in the output. Look it up in [docs/RULES.md](docs/RULES.md) — each rule documents why it exists and the one-line fix. The "top fixes" section tells you which fix buys the most points.
 
 **Is an LLM judging my code?**
-No. The static core is fully deterministic — pure functions over parsed artifacts, no model calls, no network. There is an optional eval tier (`assay eval`) that uses a model to test trigger accuracy; it is opt-in, bring-your-own-key, cost-capped, and clearly labeled non-deterministic in the output.
+No. The static core is fully deterministic — pure functions over parsed artifacts, no model calls, no network. The eval tier is opt-in, bring-your-own-key, cost-capped, and clearly labeled non-deterministic in the output.
 
 **Why is my A-grade artifact capped at C+?**
-A security-severity error tripped the cap: an artifact carrying a prompt injection, hidden Unicode payload, or leaked credential is not shippable regardless of how well-written it is. The scorecard shows the uncapped score too — fix the security finding and the rest of your grade is waiting for you.
+A security-severity error tripped the cap: an artifact carrying a prompt injection, hidden Unicode payload, or leaked credential is not shippable regardless of how well-written it is. Fix the security finding and the rest of your grade is waiting for you. False positive? Every security detector is a documented lexical heuristic — `--rules <ID>=off` is the escape hatch, and we want the bug report.
 
-## Status
+**Why doesn't `assay repo` grade my MCP servers automatically?**
+Because grading a stdio server means _executing a command_, and running commands found in config files as a side effect of a lint is exactly the class of behavior assay exists to catch. `assay mcp` is always explicit.
 
-**v0.1.0 — built in public.** The core pipeline, skill rules, MCP rules, context-file rules, reporters, CI gate, and badge generator are landing as reviewable PRs in this repo. Watch the PRs, file issues, disagree with a rule — the rule table is the contract and it's all open.
+## Development
+
+```bash
+npm ci             # install (Node >= 20)
+npm test           # vitest — 443 tests, incl. pinned fixture grades & a 100-run determinism check
+npm run build      # tsup → dist/cli.js
+npx tsx src/cli.ts fixtures/skills/mediocre   # run the CLI from source
+npm run gen:docs   # regenerate docs/RULES.md from rule metadata (never hand-edit it)
+```
+
+The architecture is deliberately boring: [`src/core/types.ts`](src/core/types.ts) is the frozen contract, adapters own all I/O, rules are data + pure functions, reporters are pure functions over the scorecard. `fixtures/` contains deliberately awful artifacts — including fake credentials and injection payloads that are supposed to be there (see [fixtures/README.md](fixtures/README.md)); they never ship in the npm package.
+
+## Contributing
+
+PRs welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). The short version: every rule needs a triggering and a passing test, rule messages must name the thing that tripped them, and if you think a rule is wrong we especially want the issue — the rule table is the contract and it's all open.
+
+## Roadmap
+
+- `assay fix` — LLM-powered auto-remediation of findings (the flagship follow-up)
+- "State of Agent Context" — grading popular public skills and servers, in public
+- Rule plugin API (rules are already data + pure functions; the surface is designed for it)
+- Watch mode, HTML report, shields.io live endpoint
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE) © 2026 sambhal-labs

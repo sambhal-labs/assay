@@ -63,20 +63,30 @@ export function renderTerminal(card: Scorecard, opts: TerminalOptions = {}): str
       `  ${c.red('▲ security errors cap the grade at C+')} ${c.dim(`(uncapped: ${Math.round(card.compositeRaw)})`)}`,
     );
   }
-  const foundational = card.dimensions.some((d) => d.findings.some((f) => f.foundational));
-  if (foundational && card.composite < card.compositeRaw) {
+  if (card.foundationalCapped) {
     lines.push(
       `  ${c.red('▲ artifact cannot load — grade pinned to F')} ${c.dim(`(rules that could run scored: ${Math.round(card.compositeRaw)})`)}`,
     );
   }
 
+  // Everything below pads to WIDTH+2 like the header — truncate the free-text
+  // part so no line breaks the 80-col screenshot layout.
+  const fitMessage = (text: string, usedVisibleChars: number): string => {
+    const room = WIDTH + 2 - usedVisibleChars;
+    return text.length <= room ? text : `${text.slice(0, Math.max(0, room - 1))}…`;
+  };
+
   if (card.topFixes.length > 0) {
     lines.push('');
     lines.push(`  ${c.bold(`Top fixes → ${card.topFixes[0]!.projectedGrade}`)}`);
     card.topFixes.forEach((fix, i) => {
-      const gain = c.green(`(+${Math.round(fix.gain)})`);
-      const count = fix.count > 1 ? c.dim(` ×${fix.count}`) : '';
-      lines.push(`   ${i + 1}. ${c.bold(fix.ruleId)}${count}  ${fix.fix}  ${gain}`);
+      const gainText = `(+${Math.round(fix.gain)})`;
+      const countText = fix.count > 1 ? ` ×${fix.count}` : '';
+      const prefixLen = 3 + 2 + 1 + fix.ruleId.length + countText.length + 2;
+      const fixText = fitMessage(fix.fix, prefixLen + gainText.length + 2);
+      lines.push(
+        `   ${i + 1}. ${c.bold(fix.ruleId)}${c.dim(countText)}  ${fixText}  ${c.green(gainText)}`,
+      );
     });
   }
 
@@ -91,8 +101,10 @@ export function renderTerminal(card: Scorecard, opts: TerminalOptions = {}): str
           (f.location?.file
             ? `${f.location.file}${f.location.line ? `:${f.location.line}` : ''}`
             : '');
+        const prefixLen = 3 + 2 + f.ruleId.length + 2;
+        const message = fitMessage(f.message, prefixLen + (loc ? loc.length + 2 : 0));
         lines.push(
-          `   ${severityGlyph(c, f)} ${f.ruleId}  ${f.message}${loc ? c.dim(`  ${loc}`) : ''}`,
+          `   ${severityGlyph(c, f)} ${f.ruleId}  ${message}${loc ? c.dim(`  ${loc}`) : ''}`,
         );
       }
     }

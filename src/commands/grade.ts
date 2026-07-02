@@ -59,8 +59,8 @@ export async function gradeSingleTarget(
 }
 
 /**
- * `assay <path>` / `assay skill <dir>` — detect, grade, print. A repo target
- * routes to repo mode, which prints its own rollup.
+ * `assay <path>` — detect, grade, print. A repo target routes to repo mode,
+ * which prints its own rollup.
  */
 export async function runGrade(target: string, opts: GlobalOptions): Promise<void> {
   const detected = await detectTarget(target);
@@ -68,6 +68,23 @@ export async function runGrade(target: string, opts: GlobalOptions): Promise<voi
     const { runRepo } = await import('./repo.js');
     await runRepo(target, opts);
     return;
+  }
+  const config = await resolveConfig(opts);
+  printScorecard(await gradeSingleTarget(target, config), opts);
+}
+
+/**
+ * `assay skill <dir>` — explicitly a skill; anything else is a usage error,
+ * never a silent fallback to repo/context grading (a typo'd path would
+ * otherwise produce a plausible-looking but wrong report).
+ */
+export async function runGradeSkill(target: string, opts: GlobalOptions): Promise<void> {
+  const detected = await detectTarget(target);
+  if (detected.kind !== 'skill') {
+    throw new AssayError(
+      `${target} is not a skill directory (no SKILL.md found)`,
+      'use plain `assay <path>` for auto-detection, or `assay repo` for repositories',
+    );
   }
   const config = await resolveConfig(opts);
   printScorecard(await gradeSingleTarget(target, config), opts);
