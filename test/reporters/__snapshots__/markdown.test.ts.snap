@@ -1,0 +1,31 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`renderMarkdown > renders the PR comment (snapshot) 1`] = `
+"## assay: C+ (74.1) — skill \`skills/pdf-tools\`
+
+| Dimension | Score | Grade | Issues |
+| --- | ---: | :---: | ---: |
+| Structure | 100 | A+ | 0 |
+| Trigger quality | 62 | D | 2 |
+| Token efficiency | 71 | C- | 1 |
+| Instruction quality | 83 | B | 0 |
+| Security | 100 | A+ | 0 |
+
+### Top fixes
+
+1. **SK103** — Add "Use when…" guidance to the description (+9 → B 83.1)
+2. **SK202** — Split reference material into companion files (+5 → C+ 79.1)
+
+### Findings
+
+| Severity | Rule | Message | Location |
+| --- | --- | --- | --- |
+| warn | SK103 | description has no usage guidance | — |
+| warn | SK104 | description names no concrete actions | — |
+| warn | SK202 | SKILL.md body is 6,412 tokens | \`SKILL.md:12\` |
+
+---
+
+assay v0.1.0 · deterministic · 30 rules run · ~6,412 tokens · [rule docs](https://github.com/sambhal-labs/assay/blob/main/docs/RULES.md)
+"
+`;
