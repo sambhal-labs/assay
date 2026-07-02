@@ -3,10 +3,11 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
+import { CallToolResultSchema } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
 import { TOOL_NAME, TOOL_VERSION } from '../constants.js';
 import { AssayError } from '../core/errors.js';
-import type { McpArtifact, McpToolInfo, ResolvedConfig } from '../core/types.js';
+import type { McpArtifact, McpToolInfo, ProbeToolResult, ResolvedConfig } from '../core/types.js';
 import { countTokens } from '../util/tokens.js';
 
 export interface McpParseTarget {
@@ -14,10 +15,57 @@ export interface McpParseTarget {
   command?: string[];
 }
 
+export interface McpParseOptions {
+  /** Call each listed tool with schema-synthesized args (MCP4xx reliability). */
+  probe?: boolean;
+  /** Probe even tools whose name/description matches the mutation lexicon. */
+  unsafe?: boolean;
+}
+
 /** Per-page timeout for tools/list — an adapter I/O bound, not a quality budget. */
 const TOOLS_LIST_TIMEOUT_MS = 10_000;
 /** Hard stop for runaway pagination (a server re-issuing the same cursor). */
 const MAX_TOOLS_LIST_PAGES = 100;
+/** Per-call timeout for --probe tool calls. */
+const PROBE_CALL_TIMEOUT_MS = 10_000;
+
+/**
+ * Mutation safe-mode lexicon: a tool whose name or description contains one
+ * of these words (or a simple -s/-es/-d/-ed inflection) is never called by
+ * --probe unless the user explicitly passes --unsafe. Probing runs against
+ * live servers, and "grade my server" must never mean "send my users email".
+ */
+export const MUTATION_LEXICON = [
+  'delete',
+  'remove',
+  'destroy',
+  'drop',
+  'write',
+  'create',
+  'update',
+  'set',
+  'send',
+  'post',
+  'email',
+  'message',
+  'pay',
+  'purchase',
+  'buy',
+  'order',
+  'deploy',
+  'publish',
+  'push',
+  'upload',
+  'insert',
+  'patch',
+  'put',
+  'execute',
+  'kill',
+  'restart',
+  'reset',
+  'revoke',
+  'grant',
+] as const;
 
 /**
  * Lax tools/list result: the SDK's own schema rejects the whole response when
@@ -57,6 +105,156 @@ function normalizeToolEntry(entry: unknown): Omit<McpToolInfo, 'tokens'> {
 }
 
 const messageOf = (err: unknown): string => (err instanceof Error ? err.message : String(err));
+
+// ---------------------------------------------------------------------------
+// Probe (--probe): call tools with schema-synthesized args on the SAME
+// connection tools/list used, so we measure the server as a host would see it.
+// ---------------------------------------------------------------------------
+
+/** Lowercase word tokens, splitting camelCase, snake_case, and kebab-case. */
+function wordsOf(text: string): Set<string> {
+  const spaced = text.replace(/([a-z0-9])([A-Z])/g, '$1 $2').toLowerCase();
+  return new Set(spaced.split(/[^a-z]+/).filter(Boolean));
+}
+
+/** The lexicon word a tool matches, or null when it looks read-only. */
+export function mutationKeywordFor(tool: {
+  name: string;
+  description: string | undefined;
+}): string | null {
+  const tokens = wordsOf(`${tool.name} ${tool.description ?? ''}`);
+  for (const word of MUTATION_LEXICON) {
+    if (
+      tokens.has(word) ||
+      tokens.has(`${word}s`) ||
+      tokens.has(`${word}es`) ||
+      tokens.has(`${word}d`) ||
+      tokens.has(`${word}ed`)
+    ) {
+      return word;
+    }
+  }
+  return null;
+}
+
+/**
+ * Minimal schema-valid arguments: only required properties, with the most
+ * boring value each type admits. The point is that a well-behaved server must
+ * handle these without a protocol-level error (MCP401).
+ */
+export function synthesizeArgs(
+  schema: Record<string, unknown> | undefined,
+): Record<string, unknown> {
+  if (!isPlainObject(schema)) return {};
+  const properties = isPlainObject(schema.properties) ? schema.properties : {};
+  const required = Array.isArray(schema.required)
+    ? schema.required.filter((k): k is string => typeof k === 'string')
+    : [];
+  const args: Record<string, unknown> = {};
+  for (const key of required) {
+    args[key] = synthesizeValue(properties[key]);
+  }
+  return args;
+}
+
+function synthesizeValue(prop: unknown): unknown {
+  if (!isPlainObject(prop)) return 'test';
+  if (Array.isArray(prop.enum) && prop.enum.length > 0) return prop.enum[0];
+  const type = typeof prop.type === 'string' ? prop.type : undefined;
+  switch (type) {
+    case 'string':
+      return 'test';
+    case 'number':
+    case 'integer':
+      return 1;
+    case 'boolean':
+      return false;
+    case 'array':
+      return [];
+    case 'object':
+      return synthesizeArgs(prop);
+    case 'null':
+      return null;
+    default:
+      // No/unknown type: an object-looking schema recurses, anything else
+      // accepts any value, so a string is as schema-valid as it gets.
+      return isPlainObject(prop.properties) ? synthesizeArgs(prop) : 'test';
+  }
+}
+
+/**
+ * MCP403's structure test. Only the classic anti-pattern counts as
+ * unstructured: a single bare text blob that no program can parse. Anything
+ * else (JSON text, multiple content items, non-text content) is treated as
+ * machine-readable.
+ */
+function isStructuredErrorContent(content: unknown): boolean {
+  if (!Array.isArray(content) || content.length !== 1) return true;
+  const item: unknown = content[0];
+  if (!isPlainObject(item) || item.type !== 'text' || typeof item.text !== 'string') return true;
+  try {
+    JSON.parse(item.text);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function probeTools(
+  client: Client,
+  tools: McpToolInfo[],
+  unsafe: boolean,
+): Promise<ProbeToolResult[]> {
+  const results: ProbeToolResult[] = [];
+  for (const tool of tools) {
+    if (!tool.entryValid || !tool.name.trim()) {
+      results.push({
+        toolName: tool.name.trim() ? tool.name : '(unnamed tool)',
+        skipped: true,
+        skipReason: 'invalid tool entry (see MCP002)',
+      });
+      continue;
+    }
+    const keyword = mutationKeywordFor(tool);
+    if (keyword && !unsafe) {
+      results.push({
+        toolName: tool.name,
+        skipped: true,
+        skipReason: `mutation-keyword: ${keyword}`,
+      });
+      continue;
+    }
+    const args = synthesizeArgs(tool.inputSchema);
+    const startedAt = performance.now();
+    try {
+      const result = await client.callTool(
+        { name: tool.name, arguments: args },
+        CallToolResultSchema,
+        { timeout: PROBE_CALL_TIMEOUT_MS },
+      );
+      const record: ProbeToolResult = {
+        toolName: tool.name,
+        skipped: false,
+        latencyMs: Math.round(performance.now() - startedAt),
+        protocolError: false,
+      };
+      if (result.isError) {
+        record.errorStructured = isStructuredErrorContent(result.content);
+      }
+      results.push(record);
+    } catch {
+      // Timeout, JSON-RPC error, or a result failing MCP shape validation:
+      // schema-valid args must never surface as a protocol-level failure.
+      results.push({
+        toolName: tool.name,
+        skipped: false,
+        latencyMs: Math.round(performance.now() - startedAt),
+        protocolError: true,
+      });
+    }
+  }
+  return results;
+}
 
 class ConnectTimeoutError extends Error {}
 
@@ -98,10 +296,16 @@ function isTransportLevelFailure(err: unknown, transport: 'stdio' | 'http'): boo
  * Unreachable targets throw AssayError; a reachable server that misbehaves at
  * the protocol level becomes artifact state (initialized:false,
  * toolsListError, entryValid:false) that the MCP0xx rules grade.
+ *
+ * With options.probe, each listed tool is additionally called (on this same
+ * connection) with schema-synthesized arguments; results land on
+ * artifact.probe for the MCP4xx reliability rules. Mutation-looking tools are
+ * skipped unless options.unsafe.
  */
 export async function parseMcpServer(
   target: McpParseTarget,
   config: ResolvedConfig,
+  options: McpParseOptions = {},
 ): Promise<McpArtifact> {
   const { url, command } = target;
   if (!url && (!command || command.length === 0)) {
@@ -259,6 +463,11 @@ export async function parseMcpServer(
       tools.push({ ...normalized, tokens });
     }
 
+    let probe: ProbeToolResult[] | undefined;
+    if (options.probe && toolsListError === null) {
+      probe = await probeTools(client, tools, options.unsafe ?? false);
+    }
+
     return {
       ...base,
       name,
@@ -269,6 +478,7 @@ export async function parseMcpServer(
       toolsListError,
       tools,
       tokens: { total },
+      ...(probe !== undefined ? { probe } : {}),
     };
   } finally {
     // A leaked stdio child keeps the CLI's event loop alive forever.
