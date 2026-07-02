@@ -54,6 +54,13 @@ export function renderMarkdown(card: Scorecard, opts: MarkdownOptions = {}): str
     lines.push('');
   }
 
+  if (card.foundationalCapped) {
+    lines.push(
+      `> ⛔ **Foundational failure.** This artifact cannot load at all (missing SKILL.md or unusable frontmatter), so the grade is pinned to F. The rules that could still run scored ${fmtScore(card.compositeRaw)} — fix the foundational finding first.`,
+    );
+    lines.push('');
+  }
+
   lines.push('| Dimension | Score | Grade | Issues |');
   lines.push('| --- | ---: | :---: | ---: |');
   for (const dim of card.dimensions) {

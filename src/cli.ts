@@ -6,15 +6,14 @@ import { EXIT } from './constants.js';
 import { AssayError } from './core/errors.js';
 import { buildProgram, type CliHandlers } from './program.js';
 
-function notYet(feature: string): () => Promise<never> {
-  return () =>
-    Promise.reject(new AssayError(`${feature} lands in an upcoming PR — this build predates it`));
-}
-
 const handlers: CliHandlers = {
   grade: async (path, opts) => {
     const { runGrade } = await import('./commands/grade.js');
     await runGrade(path, opts);
+  },
+  gradeSkill: async (dir, opts) => {
+    const { runGradeSkill } = await import('./commands/grade.js');
+    await runGradeSkill(dir, opts);
   },
   mcp: async (target, opts) => {
     const { runMcp } = await import('./commands/mcp.js');
@@ -32,7 +31,10 @@ const handlers: CliHandlers = {
     const { runBadge } = await import('./commands/badge.js');
     await runBadge(target, out, opts);
   },
-  evalSkill: notYet('the trigger-accuracy eval'),
+  evalSkill: async (dir, evalOpts, opts) => {
+    const { runEval } = await import('./commands/eval.js');
+    await runEval(dir, evalOpts, opts);
+  },
 };
 
 async function main(): Promise<void> {

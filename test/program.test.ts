@@ -5,6 +5,7 @@ import { AssayError } from '../src/core/errors.js';
 function spies(): CliHandlers {
   return {
     grade: vi.fn().mockResolvedValue(undefined),
+    gradeSkill: vi.fn().mockResolvedValue(undefined),
     mcp: vi.fn().mockResolvedValue(undefined),
     repo: vi.fn().mockResolvedValue(undefined),
     ci: vi.fn().mockResolvedValue(undefined),
@@ -44,14 +45,14 @@ describe('assay <path> (default command)', () => {
 });
 
 describe('assay skill', () => {
-  it('routes to grade with the directory', async () => {
+  it('routes to gradeSkill with the directory', async () => {
     const h = await run(['skill', './dir']);
-    expect(h.grade).toHaveBeenCalledWith('./dir', expect.anything());
+    expect(h.gradeSkill).toHaveBeenCalledWith('./dir', expect.anything());
   });
 
   it('accepts shared flags after the subcommand too', async () => {
     const h = await run(['skill', './dir', '--format', 'json', '--no-color']);
-    expect(h.grade).toHaveBeenCalledWith(
+    expect(h.gradeSkill).toHaveBeenCalledWith(
       './dir',
       expect.objectContaining({ format: 'json', color: false }),
     );

@@ -24,6 +24,8 @@ export interface McpTarget {
  */
 export interface CliHandlers {
   grade: (path: string, opts: GlobalOptions) => Promise<void>;
+  /** Explicit `assay skill <dir>` — must be a skill, never a silent fallback. */
+  gradeSkill: (dir: string, opts: GlobalOptions) => Promise<void>;
   mcp: (target: McpTarget, opts: GlobalOptions) => Promise<void>;
   repo: (dir: string, opts: GlobalOptions) => Promise<void>;
   ci: (target: string, threshold: string | undefined, opts: GlobalOptions) => Promise<void>;
@@ -99,7 +101,7 @@ export function buildProgram(handlers: CliHandlers): Command {
   withSharedOptions(program.command('skill <dir>'))
     .description('grade a skill directory (SKILL.md + resources)')
     .action(async (dir: string, _opts, cmd: Command) => {
-      await handlers.grade(dir, globalOptions(cmd));
+      await handlers.gradeSkill(dir, globalOptions(cmd));
     });
 
   withSharedOptions(program.command('mcp'))

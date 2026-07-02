@@ -39,6 +39,7 @@ const card: Scorecard = {
   compositeRaw: 74.1,
   grade: 'C+',
   securityCapped: false,
+  foundationalCapped: false,
   topFixes: [
     {
       ruleId: 'SK103',

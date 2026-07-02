@@ -79,6 +79,7 @@ const card: Scorecard = {
   compositeRaw: 74.1,
   grade: 'C+',
   securityCapped: false,
+  foundationalCapped: false,
   topFixes: [
     {
       ruleId: 'SK103',
@@ -194,6 +195,7 @@ describe('renderMarkdown', () => {
       compositeRaw: 95.5,
       grade: 'C+',
       securityCapped: true,
+      foundationalCapped: false,
     };
     const out = renderMarkdown(capped);
     const callout = out.split('\n').find((l) => l.startsWith('> '));

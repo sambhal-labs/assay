@@ -14,34 +14,62 @@ export interface PhraseHit {
 const INJECTION_PATTERNS: ReadonlyArray<readonly [name: string, re: RegExp]> = [
   [
     'ignore-instructions',
-    /\bignore\s+(?:all\s+|any\s+)?(?:previous|prior|above|earlier)\s+instructions\b/gi,
+    /\b(?:ignore|disregard|forget)\s+(?:all\s+|any\s+)?(?:the\s+)?(?:previous|prior|above|earlier)\s+instructions\b/gi,
   ],
   [
     'conceal-from-user',
-    /\bdo\s+not\s+(?:tell|inform|mention|reveal|alert|notify|warn)\s+the\s+user\b/gi,
+    /\bdo\s+not\s+(?:tell|inform|mention|reveal|alert|notify|warn|surface\s+(?:this\s+)?to)\s+the\s+(?:user|person|human)\b/gi,
   ],
-  ['conceal-from-user', /\b(?:don't|do\s+not|never)\s+(?:mention|reveal|show|display)\s+this\b/gi],
+  [
+    'conceal-from-user',
+    /\b(?:don't|do\s+not|never)\s+(?:mention|reveal|show|display|surface)\s+this\b/gi,
+  ],
   ['hide-this', /\bhide\s+this\s+(?:from|message|instruction|tool)\b/gi],
+  // Only exfiltration-direction verbs: "read the system prompt the user
+  // provides" and "show the user the revised system prompt" are ordinary
+  // prompt-engineering prose and must not fire.
   [
     'system-prompt-exfil',
-    /\b(?:reveal|print|show|extract|read|repeat|output|leak)\b[^.\n]{0,60}\bsystem\s+prompt\b/gi,
+    /\b(?:reveal|leak|exfiltrate|repeat|dump|disclose)\b[^.\n]{0,60}\bsystem\s+prompt\b/gi,
   ],
   ['tool-precedence', /\bbefore\s+(?:using|calling|invoking)\s+any\s+other\s+tool\b/gi],
   ['tool-precedence', /\b(?:always\s+)?(?:use|call|invoke)\s+this\s+tool\s+(?:first|instead)\b/gi],
   ['pseudo-tag', /<\/?(?:important|system|admin|hidden|secret|instructions?)>/gi],
 ];
 
+/** Pattern names that legitimately appear inside fenced code examples. */
+const FENCE_EXEMPT_PATTERNS = new Set(['pseudo-tag', 'system-prompt-exfil']);
+
 const FETCH_EXECUTE_PATTERNS: ReadonlyArray<readonly [name: string, re: RegExp]> = [
-  ['curl-pipe-shell', /\b(?:curl|wget)\b[^\n|]*\|\s*(?:sudo\s+)?(?:ba|z|da|fi)?sh\b/gi],
+  // (?:\\\r?\n)? tolerates backslash line-continuations inside the command.
+  ['curl-pipe-shell', /\b(?:curl|wget)\b(?:[^\n|]|\\\r?\n)*\|\s*(?:sudo\s+)?(?:ba|z|da|fi)?sh\b/gi],
   ['download-and-run', /\bdownload\s+(?:and|then)\s+(?:run|execute)\b/gi],
   ['eval-fetch', /\beval\s*\(\s*(?:await\s+)?(?:fetch|request|urlopen)\b/gi],
 ];
 
+/**
+ * Index ranges of fenced code blocks (``` … ```), so template-ish patterns
+ * can be exempted inside examples without changing hit indices.
+ */
+function fencedRanges(text: string): Array<[number, number]> {
+  const ranges: Array<[number, number]> = [];
+  const re = /^```[^\n]*\n[\s\S]*?^```[ \t]*$/gm;
+  for (const m of text.matchAll(re)) {
+    ranges.push([m.index, m.index + m[0].length]);
+  }
+  return ranges;
+}
+
+const inRanges = (index: number, ranges: Array<[number, number]>): boolean =>
+  ranges.some(([start, end]) => index >= start && index < end);
+
 function scan(text: string, patterns: ReadonlyArray<readonly [string, RegExp]>): PhraseHit[] {
   const hits: PhraseHit[] = [];
+  const fences = fencedRanges(text);
   for (const [pattern, re] of patterns) {
     re.lastIndex = 0;
     for (const m of text.matchAll(re)) {
+      if (FENCE_EXEMPT_PATTERNS.has(pattern) && inRanges(m.index, fences)) continue;
       hits.push({ pattern, match: m[0], index: m.index });
     }
   }
