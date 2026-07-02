@@ -31,7 +31,7 @@ function cannedProvider(): Provider {
         );
       }
       const wantsPdf = /User request:\n[\s\S]*?pdf/i.test(prompt.split('Which skill')[0]!);
-      return JSON.stringify({ skill: wantsPdf ? 'pdf-form-filler' : null });
+      return JSON.stringify({ skill: wantsPdf ? 'exemplary' : null });
     },
   };
 }
@@ -76,7 +76,7 @@ describe('runEval (assay eval <skill-dir>)', () => {
     const printed = JSON.parse(writes.join('')) as Scorecard;
     expect(printed.deterministic).toBe(false);
     expect(printed.eval?.model).toBe('fake-judge');
-    expect(printed.artifact.name).toBe('pdf-form-filler');
+    expect(printed.artifact.name).toBe('exemplary');
   });
 
   it('renders the eval line in the terminal reporter', async () => {
