@@ -23,3 +23,48 @@ jobs:
       - run: npx prettier --check .
       - run: npm run build
       - run: npm test
+
+  # assay grades its own repo; our CLAUDE.md must hold an A.
+  dogfood:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: node dist/cli.js ci . --threshold A --format md | tee -a "$GITHUB_STEP_SUMMARY"
+
+  # Prove action.yml works before anyone else consumes it.
+  action-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        with:
+          path: fixtures/skills/exemplary
+          threshold: B+
+
+  # The published tarball must contain dist and never the fixtures
+  # (they hold deliberate fake secrets and injection payloads).
+  pack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Assert tarball contents
+        run: |
+          npm pack --dry-run --json > pack.json
+          node -e "
+            const files = require('./pack.json')[0].files.map(f => f.path);
+            const ok = files.includes('dist/cli.js') && !files.some(f => f.startsWith('fixtures/'));
+            if (!ok) { console.error('tarball contents wrong:', files); process.exit(1); }
+            console.log('tarball ok:', files.join(', '));
+          "

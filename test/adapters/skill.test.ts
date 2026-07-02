@@ -11,7 +11,7 @@ describe('parseSkill', () => {
   it('parses the exemplary fixture end to end', async () => {
     const artifact = await parseSkill(join(fixturesDir, 'skills/exemplary'));
     expect(artifact.skillFileExists).toBe(true);
-    expect(artifact.name).toBe('pdf-form-filler');
+    expect(artifact.name).toBe('exemplary');
     expect(artifact.frontmatter.present).toBe(true);
     expect(artifact.frontmatter.error).toBeNull();
     expect(artifact.frontmatter.parsed?.description).toContain('Use when');

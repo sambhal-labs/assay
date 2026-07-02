@@ -1,5 +1,6 @@
 import {
   DECAY_STEPS,
+  FOUNDATIONAL_CAP_SCORE,
   DECAY_TAIL,
   DIMENSION_LABELS,
   DIMENSION_WEIGHTS,
@@ -62,9 +63,17 @@ export function score(input: ScoreInput): Scorecard {
 
   const { composite: compositeRaw, dimensions } = computeComposite(findings, weights, ruleMeta);
 
+  const foundationalCapped =
+    compositeRaw > FOUNDATIONAL_CAP_SCORE && findings.some((f) => f.foundational === true);
   const securityCapped =
-    compositeRaw > SECURITY_CAP_SCORE && findings.some((f) => triggersSecurityCap(f, ruleMeta));
-  const composite = securityCapped ? SECURITY_CAP_SCORE : compositeRaw;
+    !foundationalCapped &&
+    compositeRaw > SECURITY_CAP_SCORE &&
+    findings.some((f) => triggersSecurityCap(f, ruleMeta));
+  const composite = foundationalCapped
+    ? FOUNDATIONAL_CAP_SCORE
+    : securityCapped
+      ? SECURITY_CAP_SCORE
+      : compositeRaw;
 
   return {
     schemaVersion: 1,
@@ -93,6 +102,17 @@ export function score(input: ScoreInput): Scorecard {
 function triggersSecurityCap(f: Finding, ruleMeta: ScoreInput['ruleMeta']): boolean {
   if (f.severity !== 'error') return false;
   return f.dimension === 'security' || ruleMeta(f.ruleId)?.securityCap === true;
+}
+
+/** Foundational cap first (artifact can't load), then the security cap. */
+function applyCaps(raw: number, findings: Finding[], ruleMeta: ScoreInput['ruleMeta']): number {
+  if (raw > FOUNDATIONAL_CAP_SCORE && findings.some((f) => f.foundational === true)) {
+    return FOUNDATIONAL_CAP_SCORE;
+  }
+  if (raw > SECURITY_CAP_SCORE && findings.some((f) => triggersSecurityCap(f, ruleMeta))) {
+    return SECURITY_CAP_SCORE;
+  }
+  return raw;
 }
 
 function computeComposite(
@@ -152,9 +172,7 @@ function computeTopFixes(
   const candidates = ruleIds.map((ruleId) => {
     const remaining = findings.filter((f) => f.ruleId !== ruleId);
     const { composite: raw } = computeComposite(remaining, weights, ruleMeta);
-    const capped =
-      raw > SECURITY_CAP_SCORE && remaining.some((f) => triggersSecurityCap(f, ruleMeta));
-    const projected = capped ? SECURITY_CAP_SCORE : raw;
+    const projected = applyCaps(raw, remaining, ruleMeta);
     const instances = findings.filter((f) => f.ruleId === ruleId);
     const first = instances[0]!;
     return {

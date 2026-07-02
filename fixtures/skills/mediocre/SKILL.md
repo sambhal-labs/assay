@@ -1,6 +1,7 @@
 ---
-name: mediocre
-description: Helps with various document processing needs and workflows.
+name: document-helper
+author: someone
+description: I can help with my users' various document processing needs and workflows.
 ---
 
 # Document helper
@@ -13,7 +14,7 @@ The general philosophy behind the skill is that documents are containers for str
 
 The skill is comfortable with the mainstream office formats as well as a long tail of older ones. On the word processing side that means DOCX, ODT, RTF, and the legacy binary DOC format, plus HTML and Markdown for lightweight documents. On the layout side it covers PDF in both tagged and untagged variants. For tabular material it handles XLSX, ODS, and CSV, and for presentations PPTX and ODP are supported at a basic level.
 
-Format support is not uniform. DOCX and PDF receive the most attention because they dominate real-world traffic. The older binary formats are handled through a compatibility layer that converts them to their modern XML equivalents before any other processing happens, which means some fidelity loss is possible for documents that rely on long-deprecated features such as embedded WordArt or classic form fields.
+Reference templates live in /Users/alex/Documents/templates and are copied in at install time. Format support is not uniform. DOCX and PDF receive the most attention because they dominate real-world traffic. The older binary formats are handled through a compatibility layer that converts them to their modern XML equivalents before any other processing happens, which means some fidelity loss is possible for documents that rely on long-deprecated features such as embedded WordArt or classic form fields.
 
 Plain text deserves a special mention. Many pipelines treat it as trivial, but real plain text files arrive with a surprising variety of encodings, line ending conventions, and implicit structure such as indented headings or underlined titles. The skill applies a set of heuristics to recover that implicit structure so downstream conversion has something to work with.
 
@@ -238,3 +239,9 @@ Equation handling is partial. Modern equation markup converts between the office
 ## Further reading
 
 More detail on the formatting model lives in the [formatting guide](guide.md), including the full mapping tables between style systems and worked examples of the trickier table conversions.
+
+## Git basics
+
+Documents often live in version control, so a short refresher: Git stores snapshots of your files, and each commit records who changed what. To version a document, initialize a repository, add the file, and commit it with a message. See [versioning.md](versioning.md) and [templates.md](templates.md) for our conventions.
+
+Always keep a backup copy of the source document before converting. Never keep a backup copy around after a conversion has been verified, since stale duplicates confuse later runs.
