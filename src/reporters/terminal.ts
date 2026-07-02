@@ -63,6 +63,12 @@ export function renderTerminal(card: Scorecard, opts: TerminalOptions = {}): str
       `  ${c.red('▲ security errors cap the grade at C+')} ${c.dim(`(uncapped: ${Math.round(card.compositeRaw)})`)}`,
     );
   }
+  const foundational = card.dimensions.some((d) => d.findings.some((f) => f.foundational));
+  if (foundational && card.composite < card.compositeRaw) {
+    lines.push(
+      `  ${c.red('▲ artifact cannot load — grade pinned to F')} ${c.dim(`(rules that could run scored: ${Math.round(card.compositeRaw)})`)}`,
+    );
+  }
 
   if (card.topFixes.length > 0) {
     lines.push('');

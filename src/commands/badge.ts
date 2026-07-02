@@ -7,11 +7,7 @@ import { gradeSingleTarget, resolveConfig } from './grade.js';
 import { gradeRepo } from './repo.js';
 
 /** `assay badge [target] --out assay-badge.svg` — grade-colored SVG + snippet. */
-export async function runBadge(
-  target: string,
-  out: string,
-  opts: GlobalOptions,
-): Promise<void> {
+export async function runBadge(target: string, out: string, opts: GlobalOptions): Promise<void> {
   const config = await resolveConfig(opts);
   const detected = await detectTarget(target);
 

@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Grade, Scorecard } from '../../src/core/types.js';
-import {
-  meetsThreshold,
-  renderRepoMarkdown,
-  worstGrade,
-} from '../../src/commands/repo.js';
+import { meetsThreshold, renderRepoMarkdown, worstGrade } from '../../src/commands/repo.js';
 
 function card(path: string, grade: Grade, composite: number): Scorecard {
   return {

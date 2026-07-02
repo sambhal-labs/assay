@@ -56,7 +56,11 @@ export async function gradeRepo(dir: string, config: ResolvedConfig): Promise<Re
   }
 
   // Parse every skill first so each gets the others as siblings (SK106).
-  const parsedSkills = [];
+  const parsedSkills: Array<{
+    artifact: Awaited<ReturnType<typeof parseSkill>>;
+    rel: string;
+    started: number;
+  }> = [];
   for (const rel of skillFiles) {
     const started = performance.now();
     const artifact = await parseSkill(join(root, dirname(rel)));
@@ -72,9 +76,7 @@ export async function gradeRepo(dir: string, config: ResolvedConfig): Promise<Re
 
   const cards: Scorecard[] = [];
   for (const [i, { artifact, rel, started }] of parsedSkills.entries()) {
-    cards.push(
-      gradeArtifact({ ...artifact, path: rel, siblings: siblingsOf(i) }, config, started),
-    );
+    cards.push(gradeArtifact({ ...artifact, path: rel, siblings: siblingsOf(i) }, config, started));
   }
 
   const { parseContextFile } = await import('../adapters/contextfile.js');
@@ -100,7 +102,9 @@ export function renderRepoTerminal(result: RepoResult): string {
   const pathWidth = Math.min(48, Math.max(8, ...cards.map((c) => c.artifact.path.length)));
 
   const lines: string[] = [''];
-  lines.push(`  ${pc.bold('ARTIFACT'.padEnd(pathWidth))}  ${'TYPE'.padEnd(12)} GRADE  SCORE  WORST OFFENDER`);
+  lines.push(
+    `  ${pc.bold('ARTIFACT'.padEnd(pathWidth))}  ${'TYPE'.padEnd(12)} GRADE  SCORE  WORST OFFENDER`,
+  );
   for (const card of cards) {
     const worstRule = card.topFixes[0] ? `${card.topFixes[0].ruleId} ${card.topFixes[0].fix}` : '—';
     const marker = card.composite === worstScore && cards.length > 1 ? pc.red('▸ ') : '  ';

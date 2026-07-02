@@ -10,10 +10,7 @@ import { gradeRepo, meetsThreshold, printRepoResult, worstGrade } from './repo.j
 
 function parseThreshold(value: string): Grade {
   if ((GRADES as readonly string[]).includes(value)) return value as Grade;
-  throw new AssayError(
-    `invalid threshold "${value}"`,
-    `expected one of: ${GRADES.join(' ')}`,
-  );
+  throw new AssayError(`invalid threshold "${value}"`, `expected one of: ${GRADES.join(' ')}`);
 }
 
 /**
@@ -42,15 +39,11 @@ export async function runCi(
   }
 
   const overall = worstGrade(cards);
-  const failures = cards.filter(
-    (c) => !meetsThreshold(c.grade, threshold) || c.grade === 'F',
-  );
+  const failures = cards.filter((c) => !meetsThreshold(c.grade, threshold) || c.grade === 'F');
 
   // Verdict goes to stderr so --format json output stays machine-parseable.
   if (failures.length === 0) {
-    process.stderr.write(
-      `${pc.green('✓')} ci gate: ${overall} meets threshold ${threshold}\n`,
-    );
+    process.stderr.write(`${pc.green('✓')} ci gate: ${overall} meets threshold ${threshold}\n`);
     process.exitCode = EXIT.OK;
   } else {
     for (const card of failures) {
