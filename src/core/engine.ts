@@ -35,7 +35,7 @@ export function runRules(artifact: Artifact, rules: Rule[], config: ResolvedConf
     for (const hit of hits) {
       findings.push({
         ruleId: rule.meta.id,
-        severity: override ?? rule.meta.severity,
+        severity: override ?? hit.severity ?? rule.meta.severity,
         dimension: rule.meta.dimension,
         message: hit.message,
         fix: hit.fix ?? rule.meta.fixHint,
