@@ -79,6 +79,7 @@ const card: Scorecard = {
   compositeRaw: 74.1,
   grade: 'C+',
   securityCapped: false,
+  foundationalCapped: false,
   topFixes: [
     {
       ruleId: 'SK103',
@@ -129,6 +130,7 @@ describe('renderTerminal', () => {
       compositeRaw: 95.5,
       grade: 'C+',
       securityCapped: true,
+      foundationalCapped: false,
     };
     const out = renderTerminal(capped, { color: false });
     expect(out).toContain('security errors cap the grade at C+');

@@ -42,7 +42,25 @@ interface ModifierClaim {
 }
 
 /** "\b(always|never)\s+<up to 4 lowercase words>" — punctuation ends the object. */
-const MODIFIER_RE = /\b([Aa]lways|[Nn]ever)\s+([a-z][\w'-]*(?:[ \t]+[a-z][\w'-]*){0,3})/g;
+const MODIFIER_RE = /\b([Aa]lways|[Nn]ever)\s+([A-Za-z`][\w'`-]*(?:[ \t]+[A-Za-z`][\w'`-]*){0,4})/g;
+
+/**
+ * Leading verbs too generic to anchor a contradiction: "always use X" vs
+ * "never use Y" only contradict when X and Y collide, so the verb itself is
+ * dropped before comparison (and a bare verb with no object is skipped).
+ */
+const GENERIC_LEAD_VERBS = new Set([
+  'use',
+  'keep',
+  'make',
+  'write',
+  'add',
+  'prefer',
+  'apply',
+  'include',
+  'put',
+  'run',
+]);
 
 /** Filler dropped when normalizing modifier objects for comparison. */
 const OBJECT_STOPWORDS = new Set([
@@ -77,10 +95,12 @@ function collectModifierClaims(skill: SkillArtifact): ModifierClaim[] {
   const lineOf = buildLineIndex(skill.body);
   const claims: ModifierClaim[] = [];
   for (const m of skill.body.matchAll(MODIFIER_RE)) {
-    const words = m[2]!
+    let words = m[2]!
       .toLowerCase()
+      .replace(/`/g, '')
       .split(/[ \t]+/)
-      .filter((w) => !OBJECT_STOPWORDS.has(w));
+      .filter((w) => w && !OBJECT_STOPWORDS.has(w));
+    if (words.length > 0 && GENERIC_LEAD_VERBS.has(words[0]!)) words = words.slice(1);
     if (words.length === 0) continue;
     claims.push({
       polarity: m[1]!.toLowerCase() as 'always' | 'never',

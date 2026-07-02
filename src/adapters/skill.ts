@@ -9,6 +9,11 @@ import { countTokens } from '../util/tokens.js';
 /** BOM- and CRLF-tolerant frontmatter block at the very start of the file. */
 const FRONTMATTER_RE = /^\uFEFF?---\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/;
 
+/** Resource files worth scanning for smuggled payloads (text, size-capped). */
+const TEXT_RESOURCE_RE =
+  /\.(?:md|mdx|txt|py|sh|bash|js|mjs|cjs|ts|json|yaml|yml|toml|csv|xml|html)$/i;
+const MAX_RESOURCE_BYTES = 262_144;
+
 /** Markdown links whose targets are relative paths on disk. */
 const MD_LINK_RE = /\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
 
@@ -73,6 +78,20 @@ export async function parseSkill(
     ? (await fg('**/*', { cwd: absDir, onlyFiles: true, dot: true, ignore: ['SKILL.md'] })).sort()
     : [];
 
+  // Read text resources so security rules can scan the files a model would
+  // be told to open. Size-capped; binaries and huge files are skipped.
+  const resourceContents: Array<{ path: string; content: string }> = [];
+  for (const rel of resourceFiles) {
+    if (!TEXT_RESOURCE_RE.test(rel)) continue;
+    try {
+      const info = await stat(join(absDir, rel));
+      if (info.size > MAX_RESOURCE_BYTES) continue;
+      resourceContents.push({ path: rel, content: await readFile(join(absDir, rel), 'utf8') });
+    } catch {
+      // unreadable resource: SK005 handles dead references; nothing to scan
+    }
+  }
+
   const references: SkillReference[] = [];
   if (body) {
     const lineOf = buildLineIndex(body);
@@ -107,6 +126,7 @@ export async function parseSkill(
     bodyLineCount: body ? body.split('\n').length : 0,
     tokens: { total: await countTokens(raw), body: await countTokens(body) },
     resourceFiles,
+    resourceContents,
     references,
     siblings,
   };

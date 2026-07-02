@@ -84,7 +84,7 @@ Each artifact type is scored on a fixed set of dimensions. The composite is the 
 | Definition quality  | 0.30   | 0.20                  |
 | Security            | 0.30   | 0.30                  |
 | Protocol compliance | 0.20   | 0.20                  |
-| Token cost          | 0.20   | 0.20                  |
+| Token efficiency    | 0.20   | 0.20                  |
 | Reliability         | —      | 0.10                  |
 
 Without `--probe`, Assay never calls your server's tools, so reliability cannot be measured
@@ -137,6 +137,10 @@ Two honest details:
 - The scorecard always shows the uncapped number too (`compositeRaw`, with
   `securityCapped: true`), so you can see exactly what the artifact would score once the
   security finding is fixed.
+- Downgrading a security rule below `error` in config (`"rules": {"SK401": "warn"}` or
+  `--rules SK401=off`) removes it from the cap. That is deliberate — the override syntax is
+  the documented escape hatch for false positives, and an explicit local decision beats a
+  hardcoded one. Your CI config is part of your security posture; review it accordingly.
 
 ## The foundational cap
 

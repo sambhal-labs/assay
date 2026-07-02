@@ -5,7 +5,7 @@ skill at a deliberate quality level:
 
 - `skills/exemplary/` — a well-structured skill that should grade near the top.
 - `skills/mediocre/` — valid but padded and vague: over the token budget, no
-  trigger guidance, no step structure, one dead companion link.
+  trigger guidance, no step structure, three dead companion links.
 - `skills/broken/` — malformed frontmatter and a dead link.
 - `skills/malicious/` — deliberately well-written so that its grade is decided
   purely by the security cap. It embeds injection phrasing, hidden Unicode,

@@ -35,6 +35,22 @@ const isMajorDomain = (domain: string): boolean =>
 
 const URL_RE = /https?:\/\/([a-z0-9](?:[a-z0-9.-]*[a-z0-9])?)/gi;
 
+/** Runs a detector over every scanned resource file, mapping hits to findings. */
+function scanResources(
+  skill: SkillArtifact,
+  detect: (text: string) => Array<{ index: number }>,
+  toHit: (hit: never, path: string, line: number) => RuleHit,
+): RuleHit[] {
+  const hits: RuleHit[] = [];
+  for (const { path, content } of skill.resourceContents ?? []) {
+    const lineOf = buildLineIndex(content);
+    for (const hit of detect(content)) {
+      hits.push(toHit(hit as never, path, lineOf(hit.index)));
+    }
+  }
+  return hits;
+}
+
 export const securityRules: Rule[] = [
   {
     meta: {
@@ -52,10 +68,19 @@ export const securityRules: Rule[] = [
       const skill = asSkill(artifact);
       if (!skill.raw) return [];
       const lineOf = buildLineIndex(skill.raw);
-      return findInjectionPhrases(skill.raw).map((hit) => ({
+      const own = findInjectionPhrases(skill.raw).map((hit) => ({
         message: `injection phrase (${hit.pattern}): "${truncate(hit.match)}"`,
         location: { file: 'SKILL.md', line: lineOf(hit.index) },
       }));
+      const inResources = scanResources(
+        skill,
+        findInjectionPhrases,
+        (hit: { pattern: string; match: string }, path, line) => ({
+          message: `injection phrase (${hit.pattern}) in resource file: "${truncate(hit.match)}"`,
+          location: { file: path, line },
+        }),
+      );
+      return [...own, ...inResources];
     },
   },
   {
@@ -73,10 +98,19 @@ export const securityRules: Rule[] = [
       const skill = asSkill(artifact);
       if (!skill.raw) return [];
       const lineOf = buildLineIndex(skill.raw);
-      return findHiddenUnicode(skill.raw).map((hit) => ({
+      const own = findHiddenUnicode(skill.raw).map((hit) => ({
         message: `hidden ${hit.kind} character ${hit.label}`,
         location: { file: 'SKILL.md', line: lineOf(hit.index) },
       }));
+      const inResources = scanResources(
+        skill,
+        findHiddenUnicode,
+        (hit: { kind: string; label: string }, path, line) => ({
+          message: `hidden ${hit.kind} character ${hit.label} in resource file`,
+          location: { file: path, line },
+        }),
+      );
+      return [...own, ...inResources];
     },
   },
   {
@@ -94,10 +128,19 @@ export const securityRules: Rule[] = [
       const skill = asSkill(artifact);
       if (!skill.raw) return [];
       const lineOf = buildLineIndex(skill.raw);
-      return findSecrets(skill.raw).map((hit) => ({
+      const own = findSecrets(skill.raw).map((hit) => ({
         message: `${hit.kind} detected: ${hit.match}`,
         location: { file: 'SKILL.md', line: lineOf(hit.index) },
       }));
+      const inResources = scanResources(
+        skill,
+        findSecrets,
+        (hit: { kind: string; match: string }, path, line) => ({
+          message: `${hit.kind} detected in resource file: ${hit.match}`,
+          location: { file: path, line },
+        }),
+      );
+      return [...own, ...inResources];
     },
   },
   {
@@ -114,10 +157,19 @@ export const securityRules: Rule[] = [
       const skill = asSkill(artifact);
       if (!skill.body) return [];
       const lineOf = buildLineIndex(skill.body);
-      return findFetchExecute(skill.body).map((hit) => ({
+      const own = findFetchExecute(skill.body).map((hit) => ({
         message: `fetch-and-execute pattern (${hit.pattern}): "${truncate(hit.match)}"`,
         location: { file: 'SKILL.md', line: lineOf(hit.index) + skill.bodyStartLine - 1 },
       }));
+      const inResources = scanResources(
+        skill,
+        findFetchExecute,
+        (hit: { pattern: string; match: string }, path, line) => ({
+          message: `fetch-and-execute pattern (${hit.pattern}) in resource file: "${truncate(hit.match)}"`,
+          location: { file: path, line },
+        }),
+      );
+      return [...own, ...inResources];
     },
   },
   {
@@ -128,7 +180,7 @@ export const securityRules: Rule[] = [
       dimension: 'security',
       appliesTo: ['skill'],
       fixHint: 'Replace the encoded blob with plaintext content or a reviewable companion file.',
-      docs: 'Long base64 runs in instructions are unreviewable payloads: neither the user nor a code reviewer can see what the model is being told to decode and act on.',
+      docs: 'Long base64 runs in instructions are unreviewable payloads: neither the user nor a code reviewer can see what the model is being told to decode and act on. Detection is a single contiguous run past the configured length — payloads split across multiple shorter runs are a documented lexical limitation.',
     },
     check: (artifact, config) => {
       const skill = asSkill(artifact);

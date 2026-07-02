@@ -85,6 +85,7 @@ export function score(input: ScoreInput): Scorecard {
     compositeRaw: round2(compositeRaw),
     grade: gradeFor(composite),
     securityCapped,
+    foundationalCapped,
     topFixes: computeTopFixes(findings, weights, ruleMeta, composite),
     stats: {
       tokens: stats.tokens,

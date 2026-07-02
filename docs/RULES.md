@@ -226,7 +226,7 @@ Instructions like "curl … | sh" make the model execute whatever a remote serve
 
 **Severity:** warn · **Dimension:** Security
 
-Long base64 runs in instructions are unreviewable payloads: neither the user nor a code reviewer can see what the model is being told to decode and act on.
+Long base64 runs in instructions are unreviewable payloads: neither the user nor a code reviewer can see what the model is being told to decode and act on. Detection is a single contiguous run past the configured length — payloads split across multiple shorter runs are a documented lexical limitation.
 
 **Fix:** Replace the encoded blob with plaintext content or a reviewable companion file.
 

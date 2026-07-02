@@ -13,6 +13,7 @@ function card(path: string, grade: Grade, composite: number): Scorecard {
     compositeRaw: composite,
     grade,
     securityCapped: false,
+    foundationalCapped: false,
     topFixes: [
       {
         ruleId: 'SK103',

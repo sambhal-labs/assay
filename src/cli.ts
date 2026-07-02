@@ -16,6 +16,10 @@ const handlers: CliHandlers = {
     const { runGrade } = await import('./commands/grade.js');
     await runGrade(path, opts);
   },
+  gradeSkill: async (dir, opts) => {
+    const { runGradeSkill } = await import('./commands/grade.js');
+    await runGradeSkill(dir, opts);
+  },
   mcp: async (target, opts) => {
     const { runMcp } = await import('./commands/mcp.js');
     await runMcp(target, opts);

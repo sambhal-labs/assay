@@ -58,13 +58,29 @@ describe('SK101', () => {
     expect(hits[0]!.message).toContain('"TODO"');
   });
 
-  it('fires on "a skill for" boilerplate', () => {
-    const hits = findingsFor(
-      'SK101',
-      withDescription('A skill for working with documents and other files.'),
-    );
+  it('fires when the description is essentially just "a skill for X"', () => {
+    const hits = findingsFor('SK101', withDescription('A skill for documents.'));
     expect(hits).toHaveLength(1);
-    expect(hits[0]!.message).toContain('"A skill for"');
+    expect(hits[0]!.message).toContain('placeholder');
+  });
+
+  it('does not fire on real descriptions that merely contain trigger words', () => {
+    expect(
+      findingsFor(
+        'SK101',
+        withDescription(
+          "Create, sort, and archive todo items in the project's TODO.md task list. Use when the user asks to add a todo or mark a task done.",
+        ),
+      ),
+    ).toHaveLength(0);
+    expect(
+      findingsFor(
+        'SK101',
+        withDescription(
+          'A skill for converting Excel spreadsheets to Markdown tables. Use when the user asks to export tabular data.',
+        ),
+      ),
+    ).toHaveLength(0);
   });
 
   it('skips when the description is missing (SK002 owns that)', () => {

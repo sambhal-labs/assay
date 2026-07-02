@@ -225,10 +225,19 @@ async function extractFileRefs(raw: string, dir: string): Promise<ContextFileRef
     const hasSlash = token.includes('/');
     if (!hasKnownExt && !hasSlash) continue;
     if (hasKnownExt && !hasSlash && FRAMEWORK_NAMES.has(token.toLowerCase())) continue;
+    // Schemeless URLs ("api.acme.dev/v1/hook.json"): a hostname-shaped first
+    // segment is a network location, not a repo path. Dotfiles (".claude/…")
+    // stay.
+    const firstSegment = token.split('/')[0]!;
+    if (hasSlash && /^[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}$/i.test(firstSegment)) continue;
 
     const exists = await pathExists(join(dir, token));
     const explicitRelative = token.startsWith('./') || token.startsWith('../');
-    const include = hasKnownExt || explicitRelative || candidate.source === 'link' || exists;
+    // A bare basename in prose or code ("config.ts", "settings.json") often
+    // names a file living elsewhere in the tree — only a resolving one is a
+    // reference. Link targets and pathed tokens stay strict.
+    const include =
+      candidate.source === 'link' || explicitRelative || exists || (hasKnownExt && hasSlash);
     if (!include) continue;
 
     seen.add(token);
@@ -383,10 +392,16 @@ async function extractCommandRefs(raw: string, dir: string): Promise<ContextComm
 
   const seen = new Set<string>();
   const refs: ContextCommandRef[] = [];
+  const lineStarts = [0, ...[...raw.matchAll(/\n/g)].map((m) => m.index + 1)];
   for (const m of raw.matchAll(COMMAND_RE)) {
     const tool = m[1]!;
     const first = m[2]!;
     const second = m[3];
+
+    // `cd packages/web && npm run dev` runs against another directory's
+    // manifest — best effort means not guessing, so skip it entirely.
+    const lineStart = lineStarts.filter((i) => i <= m.index).pop() ?? 0;
+    if (/\bcd\s+\S+\s*(?:&&|;)/.test(raw.slice(lineStart, m.index))) continue;
 
     let script: string;
     let command: string;
