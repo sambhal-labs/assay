@@ -5,6 +5,7 @@ import { AssayError } from '../core/errors.js';
 import type { Artifact, ResolvedConfig, Scorecard } from '../core/types.js';
 import { ScorecardSchema } from '../core/types.js';
 import { gradeArtifact } from '../pipeline.js';
+import { renderMarkdown } from '../reporters/markdown.js';
 import { renderTerminal } from '../reporters/terminal.js';
 import type { GlobalOptions } from '../program.js';
 
@@ -21,9 +22,8 @@ export function printScorecard(card: Scorecard, opts: GlobalOptions): void {
     return;
   }
   if (opts.format === 'md') {
-    throw new AssayError(
-      'the markdown reporter lands in an upcoming PR — use --format terminal or json',
-    );
+    process.stdout.write(`${renderMarkdown(card)}\n`);
+    return;
   }
   process.stdout.write(
     `${renderTerminal(card, { quiet: opts.quiet, ...(opts.color !== undefined ? { color: opts.color } : {}) })}\n`,
