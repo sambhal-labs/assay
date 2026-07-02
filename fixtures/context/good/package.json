@@ -1,0 +1,12 @@
+{
+  "name": "acme-api",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "lint": "eslint src test",
+    "typecheck": "tsc --noEmit",
+    "dev": "tsx watch src/server.ts"
+  }
+}

@@ -1,0 +1,7 @@
+You are working on the Acme web client. Follow these rules when editing code.
+
+Always use tabs for indentation.
+
+Prefer small, focused components over sprawling ones.
+
+Never use tabs; indent with 2 spaces instead.
