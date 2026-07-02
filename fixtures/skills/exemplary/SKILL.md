@@ -1,5 +1,5 @@
 ---
-name: pdf-form-filler
+name: exemplary
 description: Fill, flatten, and extract fields from PDF forms (AcroForm and XFA). Use when the user asks to populate a PDF form with data, extract existing field values, flatten a completed form for distribution, or batch-fill many PDFs from a CSV or JSON source.
 ---
 

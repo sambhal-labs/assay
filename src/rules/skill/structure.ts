@@ -68,7 +68,7 @@ export const structureRules: Rule[] = [
       const skill = asSkill(artifact);
       return skill.skillFileExists
         ? []
-        : [{ message: `SKILL.md is missing or unreadable in ${skill.path}` }];
+        : [{ message: `SKILL.md is missing or unreadable in ${skill.path}`, foundational: true }];
     },
   },
   {
@@ -87,10 +87,16 @@ export const structureRules: Rule[] = [
       const hits: RuleHit[] = [];
       const fm = skill.frontmatter;
       if (!fm.present) {
-        hits.push({ message: 'SKILL.md has no YAML frontmatter block', location: { line: 1 } });
+        // No usable frontmatter: hosts cannot load the skill at all.
+        hits.push({
+          message: 'SKILL.md has no YAML frontmatter block',
+          foundational: true,
+          location: { line: 1 },
+        });
       } else if (fm.error) {
         hits.push({
           message: `frontmatter is not valid YAML: ${fm.error}`,
+          foundational: true,
           location: { line: 1 },
         });
       } else if (fm.parsed) {

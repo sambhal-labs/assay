@@ -1,0 +1,44 @@
+name: 'Assay quality gate'
+description: >-
+  Grade AI agent context artifacts (skills, MCP servers, CLAUDE.md) and fail
+  the job below a grade threshold. Fully local and deterministic.
+branding:
+  icon: 'check-circle'
+  color: 'green'
+
+inputs:
+  path:
+    description: 'Target to grade: a repo directory, skill directory, or context file'
+    required: false
+    default: '.'
+  threshold:
+    description: 'Minimum passing grade (A+, A, A-, B+, B, B-, C+, C, C-, D)'
+    required: false
+    default: 'B'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    # The action builds itself from the checked-out action repo so it works
+    # straight from a git tag with no npm dependency.
+    - name: Build assay
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: |
+        npm ci --ignore-scripts
+        npm run build
+
+    - name: Grade and gate
+      shell: bash
+      env:
+        ASSAY_PATH: ${{ inputs.path }}
+        ASSAY_THRESHOLD: ${{ inputs.threshold }}
+      run: |
+        set -o pipefail
+        node "${{ github.action_path }}/dist/cli.js" ci "$ASSAY_PATH" \
+          --threshold "$ASSAY_THRESHOLD" --format md | tee -a "$GITHUB_STEP_SUMMARY"

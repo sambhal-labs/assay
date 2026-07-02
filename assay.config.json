@@ -1,0 +1,4 @@
+{
+  "exclude": ["fixtures/**", "test/**", "demo/**"],
+  "threshold": "A"
+}
