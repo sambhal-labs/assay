@@ -1,5 +1,6 @@
 import type { Rule } from '../../core/types.js';
+import { securityRules } from './security.js';
+import { structureRules } from './structure.js';
 
-// Populated by the SK rule modules (structure, trigger, tokens, instruction,
-// security) — see the allocation table in ../index.ts.
-export const skillRules: Rule[] = [];
+// One module per dimension — see the allocation table in ../index.ts.
+export const skillRules: Rule[] = [...structureRules, ...securityRules];
