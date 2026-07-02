@@ -1,0 +1,9 @@
+{
+  "name": "acme-worker",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --outdir=dist",
+    "test": "vitest run"
+  }
+}

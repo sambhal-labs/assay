@@ -1,4 +1,5 @@
 import type { Rule } from '../../core/types.js';
+import { ctxRules } from './rules.js';
 
-// Populated by the CTX rule module — see the allocation table in ../index.ts.
-export const contextRules: Rule[] = [];
+// One module for the single quality dimension — see the allocation table in ../index.ts.
+export const contextRules: Rule[] = [...ctxRules];
