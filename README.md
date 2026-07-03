@@ -234,6 +234,7 @@ PRs welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). The short version: every
 
 ## Roadmap
 
+- **[Assay Cloud](docs/cloud.md)** — hosted grade history, PR annotations, and org policy for teams (the CLI stays free and local forever) — [join the waitlist](https://github.com/sambhal-labs/assay/issues/15)
 - `assay fix` — LLM-powered auto-remediation of findings (the flagship follow-up)
 - "State of Agent Context" — grading popular public skills and servers, in public
 - Rule plugin API (rules are already data + pure functions; the surface is designed for it)
