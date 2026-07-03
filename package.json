@@ -1,6 +1,6 @@
 {
   "name": "assaydev",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "The open-source quality gate for everything you feed an AI agent: skills, MCP servers, and context files. Lighthouse-style grades, actionable fixes, CI gating, and README badges. Fully local, zero accounts.",
   "keywords": [
     "mcp",

@@ -2,7 +2,7 @@ import type { ArtifactType, BudgetValues, Dimension, Grade, Severity } from './c
 
 export const TOOL_NAME = 'assay';
 export const PACKAGE_NAME = 'assaydev';
-export const TOOL_VERSION = '0.1.0';
+export const TOOL_VERSION = '0.1.1';
 export const REPO_URL = 'https://github.com/sambhal-labs/assay';
 export const RULES_DOCS_URL = `${REPO_URL}/blob/main/docs/RULES.md`;
 

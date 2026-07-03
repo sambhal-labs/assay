@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1 — 2026-07-03
+
+- Shorten the GitHub Action description to meet the Marketplace 125-character limit (no functional changes).
+
 ## 0.1.0 — 2026-07-02
 
 Initial public release. Built in public in a day — every subsystem landed as a reviewed PR (#1–#11).
