@@ -2,7 +2,7 @@
 
 exports[`renderTerminal > renders the scorecard (no color) 1`] = `
 "
-  ASSAY v0.1.0                                          skill · skills/pdf-tools
+  ASSAY v0.1.1                                          skill · skills/pdf-tools
 
   Structure           ████████████████████  100  A+
   Trigger quality     ████████████░░░░░░░░   62  D    2 issues

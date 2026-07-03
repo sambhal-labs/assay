@@ -1,7 +1,6 @@
 name: 'Assay quality gate'
 description: >-
-  Grade AI agent context artifacts (skills, MCP servers, CLAUDE.md) and fail
-  the job below a grade threshold. Fully local and deterministic.
+  Grade AI agent skills, MCP servers, and CLAUDE.md files. Fail CI below a grade threshold. Fully local and deterministic.
 branding:
   icon: 'check-circle'
   color: 'green'

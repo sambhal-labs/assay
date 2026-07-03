@@ -19,7 +19,7 @@
 ```text
 $ npx assaydev skill fixtures/skills/malicious
 
-  ASSAY v0.1.0                                 skill · fixtures/skills/malicious
+  ASSAY v0.1.1                                 skill · fixtures/skills/malicious
 
   Structure           ████████████████████  100  A+
   Trigger quality     ████████████████████  100  A+
