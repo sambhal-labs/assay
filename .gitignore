@@ -5,3 +5,4 @@ coverage/
 .assay/
 assay-badge.svg
 *.tgz
+.npmrc
