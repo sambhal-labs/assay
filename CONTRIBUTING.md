@@ -40,6 +40,10 @@ npm run typecheck && npm run lint && npx prettier --check . && npm test
 
 CI additionally runs the coverage gate (≥ 90% statements, 85% branches, on rules and scorer), grades this repo with itself at threshold A (dogfood), smoke-tests the GitHub Action, and asserts the npm tarball never ships the fixtures.
 
+## Cutting a release
+
+Bump the version in `package.json` + `src/constants.ts`, update `CHANGELOG.md`, regenerate the README hero block (`node dist/cli.js skill fixtures/skills/malicious --no-color`) and the dogfood badge (`node dist/cli.js badge . --out docs/assay-badge.svg`) — the hero hardcodes the version string. Tag `vX.Y.Z`, move the `v1` tag, publish.
+
 ## Disagreeing with a grade
 
 Best kind of issue. Include the artifact (or a minimal reproduction), the rule ID, and why you think the finding is wrong. Every detector is a documented heuristic — precision bugs are real bugs.

@@ -1,11 +1,20 @@
-# Assay
+<div align="center">
+
+<img src="docs/hero.svg" alt="assay — deterministic quality grades for AI agent context" width="860">
 
 [![CI](https://github.com/sambhal-labs/assay/actions/workflows/ci.yml/badge.svg)](https://github.com/sambhal-labs/assay/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/assaydev?color=4c1&label=npm%20·%20assaydev)](https://www.npmjs.com/package/assaydev)
 ![assay grade](docs/assay-badge.svg)
 [![license: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 ![node >= 20](https://img.shields.io/badge/node-%3E%3D20-brightgreen)
 
-> Deterministic quality grades for everything you feed an AI agent — skills, MCP servers, and context files. One command, a letter grade, and the exact fixes to reach the next one.
+**One command. A letter grade. The exact fixes to reach the next one.**
+
+[Quickstart](#quickstart) · [How it works](#how-it-works) · [Rules](#rules-at-a-glance) · [Grading math](docs/GRADING.md) · [Contributing](CONTRIBUTING.md)
+
+</div>
+
+---
 
 ```text
 $ npx assaydev skill fixtures/skills/malicious
@@ -28,7 +37,8 @@ $ npx assaydev skill fixtures/skills/malicious
    ✖ SK403  AWS access key ID detected: AKIAIOSF…MPLE  SKILL.md:28
    …
 
-  27 rules · 10 findings · ~899 tokens · 1.1s
+  27 rules · 10 findings · ~899 tokens · 1.0s
+  docs: https://github.com/sambhal-labs/assay/blob/main/docs/RULES.md
 ```
 
 A real run (remaining findings elided) against [a deliberately well-written skill carrying a prompt injection, hidden Unicode, and a leaked credential](fixtures/skills/malicious/SKILL.md) — four dimensions are perfect, and the grade still says _not shippable_.
@@ -49,20 +59,27 @@ Everything runs locally: no accounts, no telemetry, no network calls — except 
 
 ## Why
 
-[Tessl](https://tessl.io) — $125M raised — says skills are the new code. Code gets linters, tests, and CI gates; agent context gets vibes. The numbers back it up: [Arcade](https://www.arcade.dev)'s ToolBench index found **~0.5% of 218,000 analyzed MCP tools earn an A grade**, with missing descriptions the single most common defect. The tools that do check quality run server-side, behind accounts, on proprietary scoring.
+Skills are the new code. Code gets linters, tests, and CI gates; agent context gets vibes. The numbers back it up: [Arcade](https://www.arcade.dev)'s ToolBench index found **~0.5% of 218,000 analyzed MCP tools earn an A grade**, with missing descriptions the single most common defect. The tools that do check quality run server-side, behind accounts, on proprietary scoring.
 
 There was no `eslint` for this layer. A skill with a vague description silently never triggers. An MCP server with 40 undocumented tools taxes every conversation and degrades tool selection. A stale `CLAUDE.md` teaches the model commands that don't exist. And any of them can carry a prompt injection that no human reviewer will spot behind a zero-width character.
 
 Assay is the missing gate: **free, local, deterministic, explainable.** Every deduction has a rule ID, a one-line fix, and its exact grade impact — the same input produces the same grade on every machine, because the static core never calls a model.
 
-## How
+## How it works
 
-```text
-input ──▶ detect type ──▶ adapter (all I/O) ──▶ normalized artifact
-                                                      │
-   reporter ◀── scorecard ◀── scorer ◀── findings ◀── rule engine (56 pure rules)
- (terminal · json · md · badge)   │
-                                  └──▶ ci gate (exit code)
+```mermaid
+flowchart LR
+    IN["skill dir ·<br/>MCP server ·<br/>CLAUDE.md"] --> DET{detect}
+    DET --> AD["adapters<br/>(all I/O + token counts)"]
+    AD --> ART[("normalized<br/>artifact")]
+    ART --> ENG["rule engine<br/>56 pure functions"]
+    ENG --> SC["scorer<br/>weights · decay · caps"]
+    SC --> CARD[("scorecard")]
+    CARD --> T["terminal"]
+    CARD --> J["json"]
+    CARD --> M["markdown"]
+    CARD --> B["badge svg"]
+    CARD --> CI{{"ci gate<br/>exit 0 · 1 · 2"}}
 ```
 
 Adapters do every read, connect, and token count up front; the 56 rules are pure synchronous functions over that data — which is what makes the whole pipeline deterministic and fast (a 10-skill repo grades in well under 3 seconds, enforced by a perf test).
@@ -75,6 +92,24 @@ Two overrides keep the math honest:
 - **Foundational cap** — an artifact that cannot load at all (missing `SKILL.md`, unparseable frontmatter) pins at **F (55)**. "Nothing to check" must not read as perfect.
 
 The scorecard always shows the uncapped number too, and the "top fixes" section is a rescore, not a guess: remove all instances of a rule, recompute the grade, rank by gain.
+
+## Rules at a glance
+
+56 rules, each with a documented rationale and a one-line fix — the full table lives in [docs/RULES.md](docs/RULES.md) and is generated from rule metadata, never hand-edited.
+
+| ID range | Family                   | Rules | For example                                                                       |
+| -------- | ------------------------ | :---: | --------------------------------------------------------------------------------- |
+| `SK0xx`  | Skill · structure        |   6   | `SK001` missing SKILL.md · `SK005` dead resource references                       |
+| `SK1xx`  | Skill · trigger quality  |   6   | `SK101` placeholder description · `SK106` collides with a sibling skill           |
+| `SK2xx`  | Skill · token efficiency |   5   | `SK202` body over token budget · `SK203` monolith with zero companion files       |
+| `SK3xx`  | Skill · instructions     |   4   | `SK301` no step structure · `SK304` "always X" vs "never X"                       |
+| `SK4xx`  | Skill · security         |   6   | `SK401` prompt injection · `SK402` hidden Unicode · `SK403` secret-shaped strings |
+| `MCP0xx` | MCP · protocol           |   4   | `MCP001` initialize fails · `MCP002` malformed tools/list entries                 |
+| `MCP1xx` | MCP · definitions        |   8   | `MCP101` tool with no description · `MCP105` enum written in prose                |
+| `MCP2xx` | MCP · token cost         |   3   | `MCP202` server context tax translated into $ per 1,000 conversations             |
+| `MCP3xx` | MCP · security           |   5   | `MCP301` tool poisoning · `MCP303` cross-tool steering                            |
+| `MCP4xx` | MCP · reliability        |   3   | `MCP401` protocol error on a schema-valid call (`--probe` only)                   |
+| `CTX0xx` | Context files            |   6   | `CTX002` references a file that doesn't exist · `CTX004` contradictory rules      |
 
 ## Quickstart
 

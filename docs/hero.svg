@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="880" height="240" viewBox="0 0 880 240" role="img" aria-label="assay — deterministic quality grades for AI agent context">
+  <title>assay — deterministic quality grades for AI agent context</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1020"/>
+      <stop offset="1" stop-color="#101a33"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0.14"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="chip" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5ad83e"/>
+      <stop offset="1" stop-color="#2f9e12"/>
+    </linearGradient>
+    <clipPath id="card"><rect width="880" height="240" rx="18"/></clipPath>
+    <clipPath id="panelClip"><rect x="0" y="0" width="330" height="180" rx="12"/></clipPath>
+  </defs>
+
+  <g clip-path="url(#card)">
+    <rect width="880" height="240" fill="url(#bg)"/>
+
+    <!-- dotted grid, drifting slowly for depth -->
+    <g fill="#3b4a6b" opacity="0.35">
+      <g>
+        <animateTransform attributeName="transform" type="translate" values="0 0; -28 0; 0 0" dur="14s" repeatCount="indefinite"/>
+        <g id="dots">
+          <circle cx="20" cy="30" r="1.5"/><circle cx="76" cy="30" r="1.5"/><circle cx="132" cy="30" r="1.5"/><circle cx="188" cy="30" r="1.5"/><circle cx="244" cy="30" r="1.5"/><circle cx="300" cy="30" r="1.5"/><circle cx="356" cy="30" r="1.5"/><circle cx="412" cy="30" r="1.5"/><circle cx="468" cy="30" r="1.5"/><circle cx="524" cy="30" r="1.5"/><circle cx="580" cy="30" r="1.5"/><circle cx="636" cy="30" r="1.5"/><circle cx="692" cy="30" r="1.5"/><circle cx="748" cy="30" r="1.5"/><circle cx="804" cy="30" r="1.5"/><circle cx="860" cy="30" r="1.5"/>
+        </g>
+        <use href="#dots" xlink:href="#dots" y="56"/>
+        <use href="#dots" xlink:href="#dots" y="112"/>
+        <use href="#dots" xlink:href="#dots" y="168"/>
+      </g>
+    </g>
+
+    <!-- wordmark -->
+    <g font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">
+      <text x="56" y="98" font-size="58" font-weight="700" fill="#f5f7fb" letter-spacing="1">assay<tspan fill="#5ad83e">_</tspan><animate attributeName="opacity" values="1;1" dur="1s"/></text>
+      <text x="58" y="132" font-size="17" fill="#8b9bbd">the quality gate for AI agent context</text>
+      <text x="58" y="164" font-size="14" fill="#5f7095">skills · MCP servers · CLAUDE.md — one command, a letter grade,</text>
+      <text x="58" y="184" font-size="14" fill="#5f7095">and the exact fixes to reach the next one</text>
+    </g>
+
+    <!-- blinking cursor on the wordmark underscore -->
+    <rect x="216" y="60" width="26" height="44" fill="#5ad83e" opacity="0.9">
+      <animate attributeName="opacity" values="0.9;0.9;0;0;0.9" keyTimes="0;0.45;0.5;0.95;1" dur="1.6s" repeatCount="indefinite"/>
+    </rect>
+
+    <!-- floating isometric scorecard panel -->
+    <g transform="translate(500 38)">
+      <!-- gentle bob -->
+      <animateTransform attributeName="transform" type="translate" values="500 38; 500 30; 500 38" dur="5s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1; 0.45 0 0.55 1"/>
+      <g transform="skewY(-4)">
+        <!-- extruded side for 3D depth -->
+        <rect x="8" y="10" width="330" height="180" rx="12" fill="#060a14"/>
+        <!-- panel face -->
+        <rect x="0" y="0" width="330" height="180" rx="12" fill="#141d33" stroke="#2a3a5f" stroke-width="1.5"/>
+        <g clip-path="url(#panelClip)">
+          <!-- five grade bars, staggered grow-in, loop -->
+          <g font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#8b9bbd">
+            <text x="18" y="34">structure</text>
+            <rect x="110" y="24" height="12" rx="3" fill="#4c1">
+              <animate attributeName="width" values="0;196;196;196;0" keyTimes="0;0.18;0.5;0.9;1" dur="7s" repeatCount="indefinite" calcMode="spline" keySplines="0.2 0 0.2 1;0 0 1 1;0 0 1 1;0.4 0 1 1"/>
+            </rect>
+            <text x="18" y="62">trigger</text>
+            <rect x="110" y="52" height="12" rx="3" fill="#4c1">
+              <animate attributeName="width" values="0;180;180;180;0" keyTimes="0;0.24;0.5;0.9;1" dur="7s" repeatCount="indefinite" calcMode="spline" keySplines="0.2 0 0.2 1;0 0 1 1;0 0 1 1;0.4 0 1 1"/>
+            </rect>
+            <text x="18" y="90">tokens</text>
+            <rect x="110" y="80" height="12" rx="3" fill="#97ca00">
+              <animate attributeName="width" values="0;150;150;150;0" keyTimes="0;0.3;0.5;0.9;1" dur="7s" repeatCount="indefinite" calcMode="spline" keySplines="0.2 0 0.2 1;0 0 1 1;0 0 1 1;0.4 0 1 1"/>
+            </rect>
+            <text x="18" y="118">instructions</text>
+            <rect x="110" y="108" height="12" rx="3" fill="#dfb317">
+              <animate attributeName="width" values="0;120;120;120;0" keyTimes="0;0.36;0.5;0.9;1" dur="7s" repeatCount="indefinite" calcMode="spline" keySplines="0.2 0 0.2 1;0 0 1 1;0 0 1 1;0.4 0 1 1"/>
+            </rect>
+            <text x="18" y="146">security</text>
+            <rect x="110" y="136" height="12" rx="3" fill="#4c1">
+              <animate attributeName="width" values="0;196;196;196;0" keyTimes="0;0.42;0.5;0.9;1" dur="7s" repeatCount="indefinite" calcMode="spline" keySplines="0.2 0 0.2 1;0 0 1 1;0 0 1 1;0.4 0 1 1"/>
+            </rect>
+          </g>
+          <!-- scan line sweeping the panel -->
+          <rect x="-80" y="0" width="60" height="180" fill="url(#sheen)" transform="skewX(-12)">
+            <animate attributeName="x" values="-80;390" dur="3.5s" repeatCount="indefinite"/>
+          </rect>
+        </g>
+        <!-- grade chip -->
+        <g>
+          <animateTransform attributeName="transform" type="scale" values="1;1.06;1" dur="5s" repeatCount="indefinite" additive="sum"/>
+          <rect x="252" y="18" width="58" height="34" rx="8" fill="url(#chip)" stroke="#7ef25f" stroke-width="1"/>
+          <text x="281" y="42" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="21" font-weight="700" fill="#06210a">A+</text>
+        </g>
+      </g>
+      <!-- floor shadow, breathing opposite the bob -->
+      <ellipse cx="170" cy="205" rx="150" ry="12" fill="#000" opacity="0.35">
+        <animate attributeName="opacity" values="0.35;0.2;0.35" dur="5s" repeatCount="indefinite"/>
+        <animate attributeName="rx" values="150;138;150" dur="5s" repeatCount="indefinite"/>
+      </ellipse>
+    </g>
+
+    <!-- bottom accent line -->
+    <rect x="0" y="234" width="880" height="6" fill="#5ad83e" opacity="0.85"/>
+  </g>
+</svg>
