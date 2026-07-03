@@ -3,6 +3,6 @@ dist/
 coverage/
 *.tsbuildinfo
 .assay/
-assay-badge.svg
+/assay-badge.svg
 *.tgz
 .npmrc
